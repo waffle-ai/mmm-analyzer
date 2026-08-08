@@ -14,19 +14,16 @@ import streamlit as st
 from channel_ext import CHANNEL_KEYWORDS_EXT
 import sheets_loader
 def _dedup_channel_map(channel_map: dict) -> dict:
-    """大文字小文字・アンダースコア違いで重複するチャネルをマージする。
-
-    例: 'GOOGLE_SEARCH' と 'Google_Search' → どちらか一方に統合
-    cost/media 列が別々に検出された場合もここで合体させる。
-    """
+    """重複チャネルをマージし、同一列の二重割り当てをスコア優先で解消する。"""
+    # Step 1: チャネル名の大文字小文字・アンダースコア揺れを吸収
     groups: dict[str, list] = {}
     for name, entry in channel_map.items():
         key = name.lower().replace('_', '').replace(' ', '')
         groups.setdefault(key, []).append((name, entry))
 
-    merged = {}
+    merged: dict[str, dict] = {}
     for entries in groups.values():
-        # ALL_CAPS でない（混在ケース）名を優先、なければ最初の名前
+        # ALL_CAPS でない名を優先、なければ最初の名前
         canonical = next(
             (n for n, _ in entries if n != n.upper()),
             entries[0][0],
@@ -40,7 +37,24 @@ def _dedup_channel_map(channel_map: dict) -> dict:
                 base[field] = max(base[field], entry.get(field, 0))
         merged[canonical] = base
 
-    return merged
+    # Step 2: 同一列が複数チャネルに割り当てられている場合、スコア最大を勝者にする
+    for role, score_key in [('cost', 'cost_score'), ('media', 'media_score')]:
+        col_best: dict[str, tuple[str, float]] = {}
+        for ch, entry in merged.items():
+            col = entry.get(role)
+            if col:
+                score = entry.get(score_key, 0)
+                if col not in col_best or score > col_best[col][1]:
+                    col_best[col] = (ch, score)
+
+        for ch, entry in merged.items():
+            col = entry.get(role)
+            if col and col_best.get(col, (None,))[0] != ch:
+                entry[role] = None
+                entry[score_key] = 0
+
+    # Step 3: cost も media も None になった空チャネルを除去
+    return {ch: e for ch, e in merged.items() if e.get('cost') or e.get('media')}
 
 
 def detect_only_ext(excel_path: str, **kwargs):
