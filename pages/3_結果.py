@@ -12,8 +12,6 @@ import streamlit as st
 
 import runner as r
 
-st.set_page_config(page_title='結果 | MMM Analyzer', page_icon='📊', layout='wide')
-
 st.caption('Step 3 / 3')
 st.title('分析結果')
 

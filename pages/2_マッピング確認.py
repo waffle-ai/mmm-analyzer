@@ -12,8 +12,6 @@ import streamlit as st
 from channel_ext import CHANNEL_OPTIONS
 import runner
 
-st.set_page_config(page_title='マッピング確認 | MMM Analyzer', page_icon='🔍', layout='wide')
-
 st.caption('Step 2 / 3')
 st.title('マッピング確認・修正')
 

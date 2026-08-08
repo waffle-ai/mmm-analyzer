@@ -1,17 +1,14 @@
 # -*- coding: utf-8 -*-
-"""MMM SaaS — Streamlit エントリポイント。
-
-起動: streamlit run app.py
-"""
+"""MMM SaaS — Streamlit エントリポイント。起動: streamlit run app.py"""
 import sys
 from pathlib import Path
 
-# mmm_engineをimport可能にする（デプロイ時はmmm_engineがルートに同居）
 sys.path.insert(0, str(Path(__file__).parent))
 
 import streamlit as st
 
-# セッション状態の初期化（ページ遷移前に必ず実行）
+st.set_page_config(page_title='MMM Analyzer', page_icon='📊', layout='wide')
+
 defaults = {
     'excel_tmp_path':   None,
     'client_name':      '',
@@ -25,4 +22,9 @@ for k, v in defaults.items():
     if k not in st.session_state:
         st.session_state[k] = v
 
-st.switch_page('pages/1_アップロード.py')
+pg = st.navigation([
+    st.Page('pages/1_アップロード.py', title='データ読み込み', default=True),
+    st.Page('pages/2_マッピング確認.py', title='マッピング確認'),
+    st.Page('pages/3_結果.py', title='結果'),
+])
+pg.run()

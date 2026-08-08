@@ -84,8 +84,6 @@ def _save_result(tmp_path: str, client_name: str):
         return None, str(e)
 
 
-st.set_page_config(page_title='MMM Analyzer', page_icon='📊', layout='wide')
-
 st.title('MMM Analyzer')
 st.markdown('ExcelデータからチャネルごとのROIと予算配分最適化を自動分析します。')
 st.divider()
