@@ -11,12 +11,11 @@ import pandas as pd
 import streamlit as st
 
 import runner as r
-import sidebar_progress
 
 st.set_page_config(page_title='結果 | MMM Analyzer', page_icon='📊', layout='wide')
-sidebar_progress.show_step_progress(3)
 
-st.title('📊 Step 3 / 3 — 分析結果')
+st.caption('Step 3 / 3')
+st.title('分析結果')
 
 # ── ジョブ確認 ────────────────────────────────────────────────────────
 if not st.session_state.get('job_info'):

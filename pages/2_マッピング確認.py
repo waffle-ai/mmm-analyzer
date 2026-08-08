@@ -11,12 +11,11 @@ import streamlit as st
 
 from channel_ext import CHANNEL_OPTIONS
 import runner
-import sidebar_progress
 
 st.set_page_config(page_title='マッピング確認 | MMM Analyzer', page_icon='🔍', layout='wide')
-sidebar_progress.show_step_progress(2)
 
-st.title('🔍 Step 2 / 3 — マッピング確認・修正')
+st.caption('Step 2 / 3')
+st.title('マッピング確認・修正')
 
 # ── 前ページからのデータ確認 ─────────────────────────────────────────
 if not st.session_state.get('detect_result'):
