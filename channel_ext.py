@@ -4,37 +4,14 @@
 """
 from mmm_engine.src.data_loader import CHANNEL_KEYWORDS as _BASE
 
-# _BASE に存在しないチャネルのみを追加（重複するとMixed_Case/ALL_CAPSの混在が起きる）
+# _BASE に存在しないチャネルのみを追加（_BASE はすでに engine 側で Title_Case 変換済み）
 _EXTENDED = {
     'Criteo':   ['criteo', 'クリテオ'],
     'Naver':    ['naver', 'naver_blog'],
 }
 
-
-# 自動変換後に適用するブランド表記の上書きマップ
-_BRAND_NAMES: dict[str, str] = {
-    'Youtube':  'YouTube',
-    'Tiktok':   'TikTok',
-    'Linkedin': 'LinkedIn',
-    'Snapchat': 'Snapchat',
-}
-
-
-def _to_title(name: str) -> str:
-    """ALL_CAPSのチャネル名だけをTitle_Caseに変換し、ブランド表記を上書き。
-
-    例: GOOGLE_DEMAND → Google_Demand, META → Meta, YOUTUBE → YouTube
-        Pmax_PC → Pmax_PC（変換しない）, X_XT_en → X_XT_en（変換しない）
-    """
-    converted = '_'.join(s.capitalize() for s in name.split('_')) if name == name.upper() else name
-    return _BRAND_NAMES.get(converted, converted)
-
-
-# ベース（秤社特化）+ 汎用拡張を結合し、ALL_CAPSキーをTitle_Caseに統一
-CHANNEL_KEYWORDS_EXT: dict = {
-    _to_title(k): v
-    for k, v in {**_BASE, **_EXTENDED}.items()
-}
+# ベース（秤社特化）+ 汎用拡張を結合（_BASE はすでに Title_Case）
+CHANNEL_KEYWORDS_EXT: dict = {**_BASE, **_EXTENDED}
 
 # UIのドロップダウン用: チャネル名リスト（「未マッピング」を先頭に追加）
 CHANNEL_OPTIONS: list[str] = ['（未マッピング）'] + list(CHANNEL_KEYWORDS_EXT.keys())

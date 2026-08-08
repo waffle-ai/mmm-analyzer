@@ -37,7 +37,7 @@ def _apply_ev_transform(arr: np.ndarray, transform: str, dates) -> np.ndarray:
 
 # ── Known channel definitions ───────────────────────────────────────────────
 # Each entry: canonical_name → list of keyword fragments to match column names
-CHANNEL_KEYWORDS = {
+_CHANNEL_KEYWORDS_RAW = {
     # ── 秤クライアント ─────────────────────────────────────────────
     'SEM_PC':        ['sem', 'pc'],
     'SEM_MOBILE':    ['sem', 'mobile'],
@@ -122,6 +122,24 @@ CHANNEL_KEYWORDS = {
     'KC_SEKISAN':    ['kc_sekisan', 'kc sekisan'],
     'KC_CONST_PRICE':['kc_const_price', 'kc const price'],
 }
+
+# ブランド表記の上書きマップ（_to_title の変換後に適用）
+_CH_BRAND_NAMES: dict[str, str] = {
+    'Youtube':  'YouTube',
+    'Tiktok':   'TikTok',
+    'Linkedin': 'LinkedIn',
+}
+
+
+def _ch_title(name: str) -> str:
+    """ALL_CAPSのチャネルキーをTitle_Caseに変換。Mixed_Caseはそのまま。
+    例: GOOGLE_DEMAND → Google_Demand, META → Meta, YOUTUBE → YouTube
+    """
+    converted = '_'.join(s.capitalize() for s in name.split('_')) if name == name.upper() else name
+    return _CH_BRAND_NAMES.get(converted, converted)
+
+
+CHANNEL_KEYWORDS: dict = {_ch_title(k): v for k, v in _CHANNEL_KEYWORDS_RAW.items()}
 
 # Role detection keywords (Japanese only — romaji variants are auto-generated at module load)
 COST_KW   = ['cost', 'コスト', '費用', '出稿費', 'spend', '支出', '金額', 'amt', 'amount', '円', 'budget']
