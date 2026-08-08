@@ -20,7 +20,7 @@ st.title('マッピング確認・修正')
 # ── 前ページからのデータ確認 ─────────────────────────────────────────
 if not st.session_state.get('detect_result'):
     st.warning('先にExcelをアップロードしてください。')
-    st.page_link('pages/1_アップロード.py', label='← アップロードページへ', icon='📁')
+    st.page_link('pages/1_アップロード.py', label='← アップロードページへ')
     st.stop()
 
 detect_result = st.session_state['detect_result']
@@ -158,4 +158,4 @@ if st.button('分析を開始する →', type='primary', disabled=edited.empty)
     st.session_state['job_info']         = job_info
     st.session_state['mapping_override'] = mapping_override
     st.success('分析を開始しました！')
-    st.page_link('pages/3_結果.py', label='結果ページへ →', icon='📊')
+    st.page_link('pages/3_結果.py', label='結果ページへ →')

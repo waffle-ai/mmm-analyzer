@@ -11,14 +11,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 import streamlit as st
 
-st.set_page_config(
-    page_title='MMM Analyzer',
-    page_icon='📊',
-    layout='wide',
-    initial_sidebar_state='expanded',
-)
-
-# ── セッション状態の初期化 ────────────────────────────────────────────
+# セッション状態の初期化（ページ遷移前に必ず実行）
 defaults = {
     'excel_tmp_path':   None,
     'client_name':      '',
@@ -32,11 +25,4 @@ for k, v in defaults.items():
     if k not in st.session_state:
         st.session_state[k] = v
 
-# ── ホーム画面 ────────────────────────────────────────────────────────
-st.title('MMM Analyzer')
-st.markdown('ExcelデータからチャネルごとのROIと予算配分最適化を自動分析します。')
-
-st.divider()
-st.page_link('pages/1_アップロード.py', label='分析を開始する', icon='▶')
-
-st.caption('MMM Analyzer v0.1 | Powered by WISEDOM Marketing')
+st.switch_page('pages/1_アップロード.py')

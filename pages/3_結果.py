@@ -20,7 +20,7 @@ st.title('分析結果')
 # ── ジョブ確認 ────────────────────────────────────────────────────────
 if not st.session_state.get('job_info'):
     st.warning('まだ分析が開始されていません。')
-    st.page_link('pages/1_アップロード.py', label='← アップロードページへ', icon='📁')
+    st.page_link('pages/1_アップロード.py', label='← アップロードページへ')
     st.stop()
 
 job_info = st.session_state['job_info']
@@ -76,7 +76,7 @@ if status['status'] == 'running':
 elif status['status'] == 'failed':
     st.error('分析が失敗しました。ログを確認してください。')
     st.text_area('エラーログ', value=status.get('log_tail', ''), height=400)
-    st.page_link('pages/1_アップロード.py', label='← やり直す', icon='📁')
+    st.page_link('pages/1_アップロード.py', label='← やり直す')
     st.stop()
 
 # ── 完了 ──────────────────────────────────────────────────────────────
@@ -194,4 +194,4 @@ else:
         st.error('PPTXファイルが見つかりません。')
 
     st.divider()
-    st.page_link('pages/1_アップロード.py', label='← 新しい分析を開始する', icon='📁')
+    st.page_link('pages/1_アップロード.py', label='← 新しい分析を開始する')

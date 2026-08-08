@@ -84,24 +84,25 @@ def _save_result(tmp_path: str, client_name: str):
         return None, str(e)
 
 
-st.set_page_config(page_title='アップロード | MMM Analyzer', page_icon='📁', layout='wide')
+st.set_page_config(page_title='MMM Analyzer', page_icon='📊', layout='wide')
 
-st.caption('Step 1 / 3')
-st.title('データ読み込み')
-st.markdown('広告・CVデータを読み込んで列マッピングを自動検出します。')
+st.title('MMM Analyzer')
+st.markdown('ExcelデータからチャネルごとのROIと予算配分最適化を自動分析します。')
+st.divider()
 
-# ── クライアント名（タブ共通） ────────────────────────────────────────
+# ── ① プロジェクト名 ─────────────────────────────────────────────────
+st.subheader('① プロジェクト名の入力')
 client_name = st.text_input(
-    'クライアント名',
+    'プロジェクト名',
     value=st.session_state.get('client_name', ''),
     placeholder='例: 株式会社サンプル',
     help='PPTXレポートの表紙に使用します。',
+    label_visibility='collapsed',
 )
 
-st.divider()
-
-# ── データソースタブ ──────────────────────────────────────────────────
-tab_excel, tab_sheets = st.tabs(['📄 Excelアップロード', '📊 Google Sheetsから読み込む'])
+# ── ② データのアップロード ────────────────────────────────────────────
+st.subheader('② データのアップロード')
+tab_excel, tab_sheets = st.tabs(['Excelアップロード', 'Google Sheetsから読み込む'])
 
 # ── Tab A: Excel ──────────────────────────────────────────────────────
 with tab_excel:
@@ -176,4 +177,4 @@ if st.session_state.get('detect_result'):
     if mapping.get('unmapped'):
         st.warning(f'未マッピング列: {", ".join(mapping["unmapped"][:10])}')
 
-    st.page_link('pages/2_マッピング確認.py', label='マッピング確認へ →', icon='🔍')
+    st.page_link('pages/2_マッピング確認.py', label='マッピング確認へ →')
