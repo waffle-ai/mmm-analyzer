@@ -1,0 +1,80 @@
+# ============================================================
+# MMM スターターテンプレート — Google Search × Meta 2チャネル
+# ============================================================
+#
+# 【このテンプレートの使い方】
+#   1. クライアント名でコピー:
+#        python run_mmm.py --init-template smb --save-config output/CLIENT.yaml
+#   2. output/CLIENT.yaml を開いて列名を入力
+#   3. 実行:
+#        python run_mmm.py --excel CLIENT_DATA.xlsx --config output/CLIENT.yaml
+#
+# 【クライアントへのデータ依頼チェックリスト】
+#   必須:
+#     [ ] 期間: 最低1年（週次52週 / 日次365日）以上。2年あると理想
+#     [ ] 頻度: 週次 or 日次（月次は非推奨 — データ点数が少なすぎる）
+#     [ ] 日付列（年月日 or 年月週の開始日）
+#     [ ] CV列（成約数・申込数・リード数など、最終KPI）
+#     [ ] Google広告: スペンド（円）+ クリック数
+#     [ ] Meta広告 : スペンド（円）+ クリック数 or インプレッション数
+#   推奨（精度UP・なくても動く）:
+#     [ ] SEO/オーガニック流入数（チャネル間の相関を整理できる）
+#     [ ] Google Trends データ（検索需要の季節変動をコントロール）
+#     [ ] 祝日フラグ（0/1）または商戦期フラグ
+#
+# ============================================================
+
+client: ""        # クライアント名（レポートに表示されます）
+
+date: ""          # 日付列名   例: "date" / "週" / "Date" / "dt"
+cv:   ""          # CV列名     例: "conversion" / "cv" / "申込数" / "lead"
+
+channels:
+  GOOGLE_SEARCH:
+    spend: ""     # Google広告 スペンド列   例: "google_cost" / "g_spend" / "gads_cost"
+    media: ""     # Google広告 クリック列   例: "google_clicks" / "g_cl" / "gads_cl"
+                  # クリックデータがない場合は null と書く（スペンドをAdstock入力に使用）
+
+  META:
+    spend: ""     # Meta広告 スペンド列    例: "meta_cost" / "facebook_cost" / "fb_spend"
+    media: ""     # Meta広告 クリック/IMP  例: "meta_clicks" / "meta_imp" / "fb_cl"
+                  # クリックがなくIMPのみの場合は IMP列名を入力（自動でAdstock変換）
+                  # どちらもない場合は null（スペンドをAdstock入力に使用）
+
+controls:
+  # コントロール変数（あれば精度向上 / なければ空リストのままでOK）
+  #
+  # Google Trends（推奨 — 検索需要の季節性をモデルに組み込める）
+  #   Google Trends (https://trends.google.co.jp/) で主力KWの週次データをDLして追加
+  # - "trends_kw1"       # 主力KW（例: "リフォーム 見積もり"）の週次検索ボリューム
+  # - "trends_kw2"       # 競合KW or 補完KW（任意）
+  #
+  # SEO・自然流入（推奨）
+  # - "seo_session"      # オーガニック検索セッション数
+  #
+  # 季節・外部要因（業種によって追加）
+  # - "holiday_flag"     # 祝日フラグ（0=平日, 1=祝日）
+  # - "campaign_flag"    # 大型セール・キャンペーン期フラグ（0/1）
+
+# external_vars: 外部変数（業種・商圏に応じて追加 / --init-client で自動生成）
+# 各変数はcontrolsと同じく線形係数として推定されます（Adstock/Hill変換なし）
+#
+# transform の選択肢:
+#   none              → そのまま投入（フラグ・偏差計算済みデータ）
+#   log1p             → log(x+1) 変換（降水量・検索数など右裾の重い分布）
+#   standardize       → 標準化（スケールを合わせたい場合）
+#   seasonal_deviation → 月別平均を引いた偏差（生の気温など季節性を除去したい場合）
+#
+# external_vars:
+#   - name: temp_anomaly        # モデル内の変数名
+#     col:  平均気温             # Excelの列名
+#     transform: seasonal_deviation
+#   - name: precipitation
+#     col:  降水量
+#     transform: log1p
+#   - name: branded_search_imp
+#     col:  指名検索Imp
+#     transform: log1p
+#   - name: pr_event
+#     col:  PRフラグ
+#     transform: none
