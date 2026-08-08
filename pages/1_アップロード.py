@@ -15,6 +15,36 @@ from channel_ext import CHANNEL_KEYWORDS_EXT
 import sheets_loader
 
 
+def _dedup_channel_map(channel_map: dict) -> dict:
+    """大文字小文字・アンダースコア違いで重複するチャネルをマージする。
+
+    例: 'GOOGLE_SEARCH' と 'Google_Search' → どちらか一方に統合
+    cost/media 列が別々に検出された場合もここで合体させる。
+    """
+    groups: dict[str, list] = {}
+    for name, entry in channel_map.items():
+        key = name.lower().replace('_', '').replace(' ', '')
+        groups.setdefault(key, []).append((name, entry))
+
+    merged = {}
+    for entries in groups.values():
+        # ALL_CAPS でない（混在ケース）名を優先、なければ最初の名前
+        canonical = next(
+            (n for n, _ in entries if n != n.upper()),
+            entries[0][0],
+        )
+        base: dict = {'cost': None, 'media': None, 'cost_score': 0, 'media_score': 0}
+        for _, entry in entries:
+            for field in ('cost', 'media'):
+                if entry.get(field) and not base[field]:
+                    base[field] = entry[field]
+            for field in ('cost_score', 'media_score'):
+                base[field] = max(base[field], entry.get(field, 0))
+        merged[canonical] = base
+
+    return merged
+
+
 def detect_only_ext(excel_path: str, **kwargs):
     """拡張チャネル定義＋_sコスト認識でdetect_onlyを実行する。"""
     _orig_ch   = _dl.CHANNEL_KEYWORDS
@@ -33,7 +63,11 @@ def detect_only_ext(excel_path: str, **kwargs):
     try:
         _dl.CHANNEL_KEYWORDS = CHANNEL_KEYWORDS_EXT
         _dl._detect_role     = _detect_role_ext
-        return _dl.detect_only(excel_path, **kwargs)
+        result = _dl.detect_only(excel_path, **kwargs)
+        result['mapping']['channel_map'] = _dedup_channel_map(
+            result['mapping']['channel_map']
+        )
+        return result
     finally:
         _dl.CHANNEL_KEYWORDS = _orig_ch
         _dl._detect_role     = _orig_role
