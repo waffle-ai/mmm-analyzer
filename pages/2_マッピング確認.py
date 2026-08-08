@@ -11,10 +11,12 @@ import streamlit as st
 
 from channel_ext import CHANNEL_OPTIONS
 import runner
+import sidebar_progress
 
 st.set_page_config(page_title='マッピング確認 | MMM Analyzer', page_icon='🔍', layout='wide')
+sidebar_progress.show_step_progress(2)
 
-st.title('🔍 Step 2 — マッピング確認・修正')
+st.title('🔍 Step 2 / 3 — マッピング確認・修正')
 
 # ── 前ページからのデータ確認 ─────────────────────────────────────────
 if not st.session_state.get('detect_result'):
@@ -41,7 +43,11 @@ st.divider()
 
 # ── チャネルマッピングテーブル ────────────────────────────────────────
 st.subheader('チャネルマッピング')
-st.caption('自動検出結果です。ドロップダウンでチャネル名を修正できます。「（未マッピング）」にするとそのチャネルは分析から除外されます。')
+st.info(
+    '自動検出の結果です。内容を確認し、問題なければ**このままページ下の「分析を開始する」を押してOKです。**'
+    '　チャネル名や役割を変更したい場合はドロップダウンで修正できます。'
+    '「（未マッピング）」にするとそのチャネルは分析から除外されます。'
+)
 
 channel_map = mapping.get('channel_map', {})
 

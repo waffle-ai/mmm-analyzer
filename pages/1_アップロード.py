@@ -13,6 +13,7 @@ import mmm_engine.src.data_loader as _dl
 import streamlit as st
 from channel_ext import CHANNEL_KEYWORDS_EXT
 import sheets_loader
+import sidebar_progress
 
 
 def _dedup_channel_map(channel_map: dict) -> dict:
@@ -87,8 +88,9 @@ def _save_result(tmp_path: str, client_name: str):
 
 
 st.set_page_config(page_title='アップロード | MMM Analyzer', page_icon='📁', layout='wide')
+sidebar_progress.show_step_progress(1)
 
-st.title('📁 Step 1 — データ読み込み')
+st.title('📁 Step 1 / 3 — データ読み込み')
 st.markdown('広告・CVデータを読み込んで列マッピングを自動検出します。')
 
 # ── クライアント名（タブ共通） ────────────────────────────────────────

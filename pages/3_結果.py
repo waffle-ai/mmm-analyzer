@@ -11,10 +11,12 @@ import pandas as pd
 import streamlit as st
 
 import runner as r
+import sidebar_progress
 
 st.set_page_config(page_title='結果 | MMM Analyzer', page_icon='📊', layout='wide')
+sidebar_progress.show_step_progress(3)
 
-st.title('📊 Step 3 — 分析結果')
+st.title('📊 Step 3 / 3 — 分析結果')
 
 # ── ジョブ確認 ────────────────────────────────────────────────────────
 if not st.session_state.get('job_info'):
@@ -84,6 +86,34 @@ else:
 
     summary = r.load_summary(status['json_path'])
 
+    # ── 推奨アクション ────────────────────────────────────────────────
+    _ch_all   = summary.get('channels', {})
+    _ch_valid = {ch: v for ch, v in _ch_all.items() if not v.get('is_zero', False)}
+    if _ch_valid:
+        _by_roi   = sorted(_ch_valid.items(), key=lambda x: x[1].get('roi', 0), reverse=True)
+        _top_ch, _top_v = _by_roi[0]
+        _cv_lift  = summary.get('cv_lift_pct', 0)
+        _lift_str = f'+{_cv_lift:.1f}%' if _cv_lift >= 0 else f'{_cv_lift:.1f}%'
+        _sat_chs  = [ch for ch, v in _by_roi if v.get('saturation_label') == '高']
+
+        st.subheader('推奨アクション')
+        _n    = 3 if _sat_chs else 2
+        _cols = st.columns(_n)
+        _cols[0].success(
+            f'**増額を検討: {_top_ch}**\n\n'
+            f'ROI {_top_v["roi"]:.2f}x — 最も効率の高いチャネルです。'
+        )
+        _cols[1].info(
+            f'**配分最適化で {_lift_str} CV向上**\n\n'
+            '同じ予算のまま、下のROI表を参考に高ROIチャネルへ配分をシフトしましょう。'
+        )
+        if _sat_chs:
+            _cols[2].warning(
+                f'**飽和に注意: {_sat_chs[0]}**\n\n'
+                '追加投資の限界効用が低下しています。他チャネルへの振り替えを検討してください。'
+            )
+        st.divider()
+
     # ── KPIサマリー ──────────────────────────────────────────────────
     st.subheader('モデル精度')
     m1, m2, m3, m4 = st.columns(4)
@@ -96,9 +126,12 @@ else:
 
     st.subheader('予算最適化サマリー')
     o1, o2, o3 = st.columns(3)
+    def _pct_str(v: float) -> str:
+        return f'+{v:.1f}%' if v >= 0 else f'{v:.1f}%'
+
     o1.metric('現状CV',             f'{summary["total_cv"]:,}件')
-    o2.metric('最適配分後CV（同予算）', f'+{summary["cv_lift_pct"]:.1f}%', help='同じ予算で配分を最適化した場合のCV増加率')
-    o3.metric(f'増額{int(summary["budget_increase"]*100)}%後CV', f'+{summary["cv_lift_pct_b"]:.1f}%')
+    o2.metric('最適配分後CV（同予算）', _pct_str(summary['cv_lift_pct']), help='同じ予算で配分を最適化した場合のCV増加率')
+    o3.metric(f'増額{int(summary["budget_increase"]*100)}%後CV', _pct_str(summary['cv_lift_pct_b']))
 
     st.divider()
 
