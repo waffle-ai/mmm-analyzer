@@ -11,15 +11,23 @@ _EXTENDED = {
 }
 
 
-def _to_title(name: str) -> str:
-    """ALL_CAPSのチャネル名だけをTitle_Caseに変換。Mixed_Case / Camelはそのまま。
+# 自動変換後に適用するブランド表記の上書きマップ
+_BRAND_NAMES: dict[str, str] = {
+    'Youtube':  'YouTube',
+    'Tiktok':   'TikTok',
+    'Linkedin': 'LinkedIn',
+    'Snapchat': 'Snapchat',
+}
 
-    例: GOOGLE_DEMAND → Google_Demand, META → Meta
+
+def _to_title(name: str) -> str:
+    """ALL_CAPSのチャネル名だけをTitle_Caseに変換し、ブランド表記を上書き。
+
+    例: GOOGLE_DEMAND → Google_Demand, META → Meta, YOUTUBE → YouTube
         Pmax_PC → Pmax_PC（変換しない）, X_XT_en → X_XT_en（変換しない）
     """
-    if name == name.upper():
-        return '_'.join(s.capitalize() for s in name.split('_'))
-    return name
+    converted = '_'.join(s.capitalize() for s in name.split('_')) if name == name.upper() else name
+    return _BRAND_NAMES.get(converted, converted)
 
 
 # ベース（秤社特化）+ 汎用拡張を結合し、ALL_CAPSキーをTitle_Caseに統一
