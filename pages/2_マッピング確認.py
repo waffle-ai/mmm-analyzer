@@ -191,11 +191,19 @@ if True:  # 以前のタブを廃止し直接レンダリング
             '</span></span></div>',
             unsafe_allow_html=True,
         )
-        n_trials = st.number_input(
+        _trial_presets = {
+            'テスト（50回・動作確認用）': 50,
+            '標準（2,000回・推奨）':      2000,
+            '高精度（5,000回・時間がかかります）': 5000,
+        }
+        _trial_choice = st.radio(
             'パレート探索試行数',
-            min_value=50, max_value=5000, value=2000, step=50,
+            list(_trial_presets.keys()),
+            index=1,
+            horizontal=True,
             label_visibility='collapsed',
         )
+        n_trials = _trial_presets[_trial_choice]
     with col_b:
         report_type = st.selectbox('レポートタイプ', ['full（フルレポート）', 'simple（簡易版）'])
         report_type_val = 'full' if 'full' in report_type else 'simple'
