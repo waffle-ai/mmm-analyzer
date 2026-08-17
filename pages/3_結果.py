@@ -57,11 +57,12 @@ else:
 if status['status'] == 'running':
     st.info('分析を実行中です... 完了まで数分〜十数分かかります。ページは自動的に更新されます。')
     prog_ph = st.empty()
-    log_ph  = st.empty()
     prog_ph.progress(0, text='分析中...')
 
     log_text = status.get('log_tail', '')
-    log_ph.text_area('実行ログ', value=log_text, height=300, disabled=True)
+    with st.expander('実行ログを見る'):
+        st.text_area('実行ログ', value=log_text, height=300, disabled=True,
+                      label_visibility='collapsed')
 
     _MARKERS = [
         ('Step 9:',            95, 'レポート生成中...'),
