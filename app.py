@@ -37,6 +37,26 @@ _icon_upload   = _b64img('icon-upload.png')
 _icon_mapping  = _b64img('icon-mapping.png')
 _icon_analysis = _b64img('icon-analysis.png')
 
+# ── ナビゲーション定義（認証状態に関わらず毎回登録する。switch_page から参照するため）──
+pg = st.navigation({
+    'データのアップロード': [
+        st.Page('pages/1_アップロード.py', title='データのアップロード', default=True, url_path='upload'),
+    ],
+    'データのマッピング': [
+        st.Page('pages/2_マッピング確認.py', title='マッピング設定',   url_path='mapping'),
+        st.Page('pages/2b_preview.py',      title='データプレビュー', url_path='data-preview'),
+    ],
+    '分析結果': [
+        st.Page('pages/summary.py',          title='分析サマリ',        url_path='summary'),
+        st.Page('pages/6_model.py',          title='モデル精度',        url_path='accuracy'),
+        st.Page('pages/5_detail.py',         title='チャネル分析',      url_path='channel'),
+        st.Page('pages/3_結果.py',           title='ROI・CPA分析',     url_path='roi-cpa'),
+        st.Page('pages/4_budget.py',         title='予算配分分析',      url_path='allocation'),
+        st.Page('pages/7_frontier.py',       title='投資上限分析',      url_path='investment-cap'),
+        st.Page('pages/8_budget_change.py',  title='予算増額・減額分析', url_path='budget-change'),
+    ],
+})
+
 # ── ログイン設定 ──────────────────────────────────────────────────────────
 _PASSWORD  = st.secrets.get('APP_PASSWORD',  os.environ.get('APP_PASSWORD',  ''))
 _DEMO_USER = st.secrets.get('DEMO_USER',     os.environ.get('DEMO_USER',     'demo'))
@@ -110,10 +130,10 @@ if _PASSWORD and not st.session_state.get('_authenticated', False):
         if _uname == _DEMO_USER.lower() and pwd == _DEMO_PASS:
             st.session_state['_authenticated'] = True
             st.session_state['_is_demo_user']  = True
-            st.rerun()
+            st.switch_page('pages/1_アップロード.py')
         elif pwd == _PASSWORD:
             st.session_state['_authenticated'] = True
-            st.rerun()
+            st.switch_page('pages/1_アップロード.py')
         else:
             st.error('ユーザー名またはパスワードが違います。')
 
@@ -383,26 +403,6 @@ with st.sidebar:
         f'<div class="sidebar-footer">{logo_html}</div>',
         unsafe_allow_html=True,
     )
-
-pg = st.navigation({
-    'データのアップロード': [
-        st.Page('pages/1_アップロード.py', title='データのアップロード', default=True, url_path='upload'),
-    ],
-    'データのマッピング': [
-        st.Page('pages/2_マッピング確認.py', title='マッピング設定',   url_path='mapping'),
-        st.Page('pages/2b_preview.py',      title='データプレビュー', url_path='data-preview'),
-    ],
-    '分析結果': [
-        st.Page('pages/summary.py',          title='分析サマリ',        url_path='summary'),
-        st.Page('pages/6_model.py',          title='モデル精度',        url_path='accuracy'),
-        st.Page('pages/5_detail.py',         title='チャネル分析',      url_path='channel'),
-        st.Page('pages/3_結果.py',           title='ROI・CPA分析',     url_path='roi-cpa'),
-        st.Page('pages/4_budget.py',         title='予算配分分析',      url_path='allocation'),
-        st.Page('pages/7_frontier.py',       title='投資上限分析',      url_path='investment-cap'),
-        st.Page('pages/8_budget_change.py',  title='予算増額・減額分析', url_path='budget-change'),
-    ],
-})
-
 
 # ── セクションアイコン（JavaScript で DOM に直接注入）────────────────────
 import streamlit.components.v1 as _components
