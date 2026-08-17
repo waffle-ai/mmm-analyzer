@@ -187,7 +187,8 @@ with tab_excel:
     )
 
     if uploaded and client_name:
-        if st.button('列マッピングを自動検出する', type='primary'):
+        _detect_btn_type = 'secondary' if st.session_state.get('detect_result') else 'primary'
+        if st.button('列マッピングを自動検出する', type=_detect_btn_type):
             with st.spinner('Excelを解析中...'):
                 suffix = Path(uploaded.name).suffix
                 tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
@@ -224,7 +225,8 @@ with tab_sheets:
     )
 
     if sheets_url and client_name:
-        if st.button('シートを読み込む', type='primary'):
+        _load_btn_type = 'secondary' if st.session_state.get('detect_result') else 'primary'
+        if st.button('シートを読み込む', type=_load_btn_type):
             with st.spinner('Google Sheetsからデータを取得中...'):
                 try:
                     tmp_path = sheets_loader.sheets_to_excel_tmp(sheets_url)
@@ -260,6 +262,11 @@ if st.session_state.get('detect_result'):
         st.metric('未マッピング列数', len(mapping.get('unmapped', [])))
 
     if mapping.get('unmapped'):
-        st.warning(f'未マッピング列: {", ".join(mapping["unmapped"][:10])}')
+        _unmapped = mapping['unmapped']
+        _shown    = ', '.join(_unmapped[:10])
+        if len(_unmapped) > 10:
+            _shown += f'　ほか {len(_unmapped) - 10} 列'
+        st.warning(f'未マッピング列: {_shown}')
 
-    st.page_link('pages/2_マッピング確認.py', label='マッピング確認へ →')
+    if st.button('マッピングを確認する', type='primary'):
+        st.switch_page('pages/2_マッピング確認.py')
