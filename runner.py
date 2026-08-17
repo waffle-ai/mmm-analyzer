@@ -146,11 +146,45 @@ def get_job_status(job_info: dict) -> dict:
             'json_path': None,
         }
 
+    # セッション復帰時（_procが無い）はプロセスの生死を確認できないため、
+    # ログの更新が5分以上止まっていたら失敗扱いにする
+    if proc is None and log_path.exists() and time.time() - log_path.stat().st_mtime > 300:
+        return {
+            'status':   'failed',
+            'log_tail': log_tail,
+            'pptx_path': None,
+            'json_path': None,
+        }
+
     return {
         'status':   'running',
         'log_tail': log_tail,
         'pptx_path': None,
         'json_path': None,
+    }
+
+
+def find_latest_job() -> dict | None:
+    """output/直下の最新ジョブディレクトリからjob_infoを再構築する（セッション復帰用）。"""
+    if not OUTPUT_BASE.exists():
+        return None
+    dirs = sorted(
+        (d for d in OUTPUT_BASE.iterdir() if d.is_dir() and (d / 'run.log').exists()),
+        key=lambda d: d.name,
+        reverse=True,
+    )
+    if not dirs:
+        return None
+    output_dir = dirs[0]
+    return {
+        'demo':        False,
+        'job_id':      output_dir.name,
+        'pid':         None,
+        'log_path':    str(output_dir / 'run.log'),
+        'output_dir':  str(output_dir),
+        'config_path': None,
+        '_proc':       None,
+        '_log_file':   None,
     }
 
 

@@ -29,9 +29,14 @@ st.markdown("""
 </div>""", unsafe_allow_html=True)
 
 if not st.session_state.get('job_info'):
-    st.warning('まだ分析が開始されていません。')
-    st.page_link('pages/1_アップロード.py', label='← アップロードページへ')
-    st.stop()
+    _recovered = r.find_latest_job()
+    if _recovered:
+        st.session_state['job_info'] = _recovered
+        st.info('前回のジョブを表示しています。')
+    else:
+        st.warning('まだ分析が開始されていません。')
+        st.page_link('pages/1_アップロード.py', label='← アップロードページへ')
+        st.stop()
 
 job_info = st.session_state['job_info']
 _is_demo  = job_info.get('demo', False)
