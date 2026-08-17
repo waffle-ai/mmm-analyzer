@@ -159,6 +159,45 @@ def load_summary(json_path: str) -> dict:
     return json.loads(Path(json_path).read_text(encoding='utf-8'))
 
 
+def dedup_channels(channels: dict) -> tuple[dict, list[str]]:
+    """表示直前のチャネル重複防御。
+
+    入力段階のマッピング重複は解消済みだが、旧ジョブのJSONを開いた場合など
+    大文字小文字・アンダースコア違いだけの同一チャネルが残っているケースがある。
+    数値が同一なら片方だけ残し、異なる場合は両方残して警告名を返す。
+
+    Returns
+    -------
+    (deduped, warn_names): 表示用チャネル辞書と、数値不一致で両方残した重複グループの
+    代表名リスト（st.warning表示用）。
+    """
+    groups: dict[str, list[str]] = {}
+    for name in channels:
+        key = name.lower().replace('_', '').replace(' ', '')
+        groups.setdefault(key, []).append(name)
+
+    deduped: dict = {}
+    warn_names: list[str] = []
+    for names in groups.values():
+        if len(names) == 1:
+            deduped[names[0]] = channels[names[0]]
+            continue
+
+        canonical = next((n for n in names if n != n.upper()), names[0])
+        _NUMERIC_KEYS = ('roi', 'cpa', 'cv_contrib', 'spend_man', 'marginal_roi')
+        first_vals = {k: channels[names[0]].get(k) for k in _NUMERIC_KEYS}
+        same = all(channels[n].get(k) == first_vals[k] for n in names[1:] for k in _NUMERIC_KEYS)
+
+        if same:
+            deduped[canonical] = channels[canonical]
+        else:
+            for n in names:
+                deduped[n] = channels[n]
+            warn_names.append(canonical)
+
+    return deduped, warn_names
+
+
 def estimate_duration(n_trials: int, n_channels: int) -> str:
     """試行数とチャネル数から処理時間を大まかに見積もる。"""
     minutes = max(1, int(n_trials * n_channels / 8000))

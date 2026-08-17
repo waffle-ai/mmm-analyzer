@@ -49,7 +49,9 @@ else:
         st.stop()
     summary = r.load_summary(status['json_path'])
 
-channels    = summary.get('channels', {})
+channels, _dup_warn = r.dedup_channels(summary.get('channels', {}))
+if _dup_warn:
+    st.warning('同名の可能性があるチャネルが複数あります。マッピングを確認して再実行してください（' + '、'.join(_dup_warn) + '）。')
 _total_cv   = summary.get('total_cv', 0)
 _cv_lift    = summary.get('cv_lift_pct', 0)        # 同予算最適化後の増加率(%)
 _cv_lift_b  = summary.get('cv_lift_pct_b', 0)     # budget_increase時の増加率(%)

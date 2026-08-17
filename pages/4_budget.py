@@ -54,7 +54,9 @@ else:
 def _pct_str(v):
     return f'+{v:.1f}%' if v >= 0 else f'{v:.1f}%'
 
-channels    = summary.get('channels', {})
+channels, _dup_warn = r.dedup_channels(summary.get('channels', {}))
+if _dup_warn:
+    st.warning('同名の可能性があるチャネルが複数あります。マッピングを確認して再実行してください（' + '、'.join(_dup_warn) + '）。')
 _total_cv   = summary.get('total_cv', 0)
 _cv_lift    = summary.get('cv_lift_pct', 0)
 _cv_lift_b  = summary.get('cv_lift_pct_b', 0)

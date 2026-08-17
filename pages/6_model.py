@@ -50,7 +50,9 @@ else:
         st.stop()
     summary = r.load_summary(status['json_path'])
 
-channels     = summary.get('channels', {})
+channels, _dup_warn = r.dedup_channels(summary.get('channels', {}))
+if _dup_warn:
+    st.warning('同名の可能性があるチャネルが複数あります。マッピングを確認して再実行してください（' + '、'.join(_dup_warn) + '）。')
 _ch_valid    = {ch: v for ch, v in channels.items() if not v.get('is_zero', False)}
 _cv_type     = summary.get('cv_metric_type', 'count')
 _is_monetary = _cv_type == 'monetary'

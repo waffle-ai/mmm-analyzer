@@ -26,6 +26,22 @@ mapping       = detect_result['mapping']
 excel_path    = st.session_state['excel_tmp_path']
 client_name   = st.session_state['client_name']
 
+
+@st.cache_data(show_spinner=False)
+def _load_column_names(path: str, sheet_name: str, header_row: int) -> list[str]:
+    """ヘッダー行だけ読んで全列名を取得する（DATE/CV列のプルダウン用）。"""
+    try:
+        df = pd.read_excel(path, sheet_name=sheet_name, header=header_row - 1,
+                            engine='openpyxl', nrows=0)
+        return [str(c) for c in df.columns]
+    except Exception:
+        return []
+
+
+_all_columns = _load_column_names(
+    excel_path, detect_result.get('sheet_name'), detect_result.get('header_row', 1),
+)
+
 # ── デモバナー ────────────────────────────────────────────────────────
 st.markdown(
     f'**プロジェクト**　{client_name}'
@@ -46,6 +62,11 @@ if True:  # 以前のタブを廃止し直接レンダリング
     """, unsafe_allow_html=True)
 
     # ── DATE/CV 列の確認 ─────────────────────────────────────────
+    _date_default = mapping.get('date_col', '')
+    _cv_default   = mapping.get('cv_col', '')
+    _date_opts    = _all_columns if _all_columns else ([_date_default] if _date_default else [])
+    _cv_opts      = _all_columns if _all_columns else ([_cv_default] if _cv_default else [])
+
     col1, col2 = st.columns(2)
     with col1:
         st.markdown(
@@ -54,7 +75,11 @@ if True:  # 以前のタブを廃止し直接レンダリング
             'YYYY-MM-DD 形式または Excel 日付シリアルを自動認識します。</span></span></div>',
             unsafe_allow_html=True,
         )
-        date_col = st.text_input('DATE列', value=mapping.get('date_col', ''), label_visibility='collapsed')
+        date_col = st.selectbox(
+            'DATE列', _date_opts,
+            index=_date_opts.index(_date_default) if _date_default in _date_opts else 0,
+            label_visibility='collapsed',
+        ) if _date_opts else ''
     with col2:
         st.markdown(
             '<div class="lbl-q">目的変数の列'
@@ -62,7 +87,11 @@ if True:  # 以前のタブを廃止し直接レンダリング
             'モデルが最適化する目標値です。</span></span></div>',
             unsafe_allow_html=True,
         )
-        cv_col = st.text_input('目的変数の列', value=mapping.get('cv_col', ''), label_visibility='collapsed')
+        cv_col = st.selectbox(
+            '目的変数の列', _cv_opts,
+            index=_cv_opts.index(_cv_default) if _cv_default in _cv_opts else 0,
+            label_visibility='collapsed',
+        ) if _cv_opts else ''
 
     st.divider()
 
@@ -186,19 +215,44 @@ if True:  # 以前のタブを廃止し直接レンダリング
 
     st.divider()
 
-    if not _is_demo and not edited.empty:
+    n_active_ch = 0
+    if not edited.empty:
         n_active_ch = edited[
             (edited['チャネル名'] != '（未マッピング）') & (edited['役割'] != '（未確定）')
         ]['チャネル名'].nunique()
-        if n_active_ch > 0:
-            est = runner.estimate_duration(int(n_trials), n_active_ch)
-            st.info(
-                f'試行数 {int(n_trials):,} × {n_active_ch} チャネル'
-                f' ＝ 処理時間の目安 **{est}**（使用PCのスペックによって変動します）'
-            )
+
+    if not _is_demo and n_active_ch > 0:
+        est = runner.estimate_duration(int(n_trials), n_active_ch)
+        st.info(
+            f'試行数 {int(n_trials):,} × {n_active_ch} チャネル'
+            f' ＝ 処理時間の目安 **{est}**（使用PCのスペックによって変動します）'
+        )
+
+    # ── 分析開始ボタンの有効化条件 ────────────────────────────────
+    _job_running = False
+    if not _is_demo and st.session_state.get('job_info'):
+        _job_running = runner.get_job_status(st.session_state['job_info'])['status'] == 'running'
+
+    if _job_running:
+        _missing = None
+        st.warning('分析を実行中です。完了後に新しい分析を開始できます。')
+        st.page_link('pages/summary.py', label='← 実行中の分析結果ページへ')
+    elif not date_col:
+        _missing = '日付列を選択してください'
+        st.warning(_missing)
+    elif not cv_col:
+        _missing = '目的変数の列を選択してください'
+        st.warning(_missing)
+    elif n_active_ch == 0:
+        _missing = '分析に使うチャネルを1つ以上選択してください'
+        st.warning(_missing)
+    else:
+        _missing = None
+
+    _start_disabled = _job_running or bool(_missing) or edited.empty
 
     # ── 分析開始ボタン ────────────────────────────────────────────
-    if st.button('分析を開始する →', type='primary', disabled=edited.empty):
+    if st.button('分析を開始する →', type='primary', disabled=_start_disabled):
 
         # mapping_override を構築（デモ・通常共通）
         new_channel_map: dict = {}
@@ -234,7 +288,7 @@ if True:  # 以前のタブを廃止し直接レンダリング
                 (68,  'L-BFGS-B 最適化中...',               2.0),
                 (82,  '予算最適化シナリオを計算中...',         1.5),
                 (93,  'レポートを生成中...',                  1.2),
-                (100, '分析完了！',                           0.5),
+                (100, '分析完了',                             0.5),
             ]
             _bar = st.progress(0, text='分析を準備中...')
             _prev = 0

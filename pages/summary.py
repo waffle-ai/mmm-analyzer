@@ -54,7 +54,9 @@ _total_cv  = summary.get('total_cv', 0)
 _cv_lift   = summary.get('cv_lift_pct', 0)
 _budget_inc = summary.get('budget_increase', 0.3)
 
-channels     = summary.get('channels', {})
+channels, _dup_warn = r.dedup_channels(summary.get('channels', {}))
+if _dup_warn:
+    st.warning('同名の可能性があるチャネルが複数あります。マッピングを確認して再実行してください（' + '、'.join(_dup_warn) + '）。')
 _ch_valid    = {ch: v for ch, v in channels.items() if not v.get('is_zero', False)}
 _cv_type     = summary.get('cv_metric_type', 'count')
 _is_monetary = _cv_type == 'monetary'
@@ -123,6 +125,16 @@ _opt_text = 'ROAS/ROI最大' if _is_monetary else 'CPA最小'
 
 _cv_lift_color = '#315E6D' if _cv_lift >= 0 else '#CB8013'
 
+if abs(_cv_lift) < 1:
+    _realloc_badge = '現状維持'
+    _realloc_text  = '現在の予算配分はすでに効率的です。配分変更による大きな改善余地は検出されませんでした。'
+else:
+    _realloc_badge = '配分最適化'
+    _realloc_text  = (
+        f'同一予算のまま配分を{_opt_text}に最適化するだけで'
+        f'<b>CV {_pct_str(_cv_lift)}改善</b>が見込めます。'
+    )
+
 _sat_html = (
     f'<div style="display:flex;align-items:flex-start;gap:10px;">'
     f'<span style="background:#CB8013;color:#fff;border-radius:999px;padding:2px 8px;'
@@ -190,10 +202,9 @@ st.markdown(f"""
       </div>
       <div style="display:flex;align-items:flex-start;gap:10px;">
         <span style="background:#7EBEAB;color:#314858;border-radius:999px;padding:2px 8px;
-             font-size:11px;font-weight:700;flex-shrink:0;white-space:nowrap;">配分最適化</span>
+             font-size:11px;font-weight:700;flex-shrink:0;white-space:nowrap;">{_realloc_badge}</span>
         <span style="font-size:13px;color:#314858;">
-          同一予算のまま配分を{_opt_text}に最適化するだけで
-          <b>CV {_pct_str(_cv_lift)}改善</b>が見込めます。
+          {_realloc_text}
         </span>
       </div>
       {_sat_html}
