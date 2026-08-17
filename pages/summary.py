@@ -211,8 +211,7 @@ st.markdown(f"""
         <span style="font-size:13px;color:#314858;">
           {_realloc_text}
         </span>
-      </div>
-      {_sat_html}
+      </div>{_sat_html}
     </div>
   </div>
 </div>""", unsafe_allow_html=True)
