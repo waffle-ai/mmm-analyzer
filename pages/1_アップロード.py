@@ -197,10 +197,12 @@ with tab_excel:
 
                 result, err = _save_result(tmp.name, client_name)
                 if err:
-                    st.error(f'解析エラー: {err}')
+                    st.error('解析に失敗しました。ヘッダー行と日付列を確認してください。')
+                    with st.expander('エラー詳細'):
+                        st.code(str(err))
                     st.stop()
                 else:
-                    st.success(f'検出完了！ シート: {result["sheet_name"]} / {result["n_rows"]}行 / 頻度: {result["freq_guess"]}')
+                    st.success(f'検出が完了しました。シート: {result["sheet_name"]} / {result["n_rows"]}行 / 頻度: {result["freq_guess"]}')
                     st.info('次のページでマッピングを確認・修正してから分析を開始してください。')
     elif not client_name:
         st.caption('クライアント名を入力するとアップロードできます。')
@@ -232,10 +234,12 @@ with tab_sheets:
 
                 result, err = _save_result(tmp_path, client_name)
                 if err:
-                    st.error(f'解析エラー: {err}')
+                    st.error('解析に失敗しました。ヘッダー行と日付列を確認してください。')
+                    with st.expander('エラー詳細'):
+                        st.code(str(err))
                     st.stop()
                 else:
-                    st.success(f'読み込み完了！ {result["n_rows"]}行 / 頻度: {result["freq_guess"]}')
+                    st.success(f'読み込みが完了しました。{result["n_rows"]}行 / 頻度: {result["freq_guess"]}')
                     st.info('次のページでマッピングを確認・修正してから分析を開始してください。')
     elif not client_name:
         st.caption('クライアント名を入力するとURLを入力できます。')
