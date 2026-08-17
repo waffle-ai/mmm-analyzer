@@ -230,6 +230,10 @@ else:
         valid_df = ch_df[ch_df['有効']].drop(columns=['有効'])
 
         st.divider()
+        st.caption(
+            '飽和度: 伸び代あり=増額で効果が見込める / 適正域=現状が効率的 / '
+            '飽和域=追加投資しても伸びにくい / 係数ゼロ=効果を検出できず'
+        )
 
         if _is_monetary:
             # ── ROAS/ROI バー（monetary mode のみ） ──────────────────────
@@ -255,6 +259,8 @@ else:
             fig_roi.update_xaxes(gridcolor='#DAEBE5', gridwidth=1)
             fig_roi.update_yaxes(gridcolor='rgba(0,0,0,0)')
             st.plotly_chart(fig_roi, use_container_width=True)
+            _top_roi_ch = roi_sorted.iloc[-1]['チャネル']
+            st.caption(f'{_eff_label}が最も高いのは【{_top_roi_ch}】です。')
 
         # ── CPA バー ────────────────────────────────────────────────────
         # count mode: 主指標として先頭表示 / monetary mode: 補足として表示
@@ -281,6 +287,9 @@ else:
             fig_cpa.update_xaxes(gridcolor='#DAEBE5')
             fig_cpa.update_yaxes(gridcolor='rgba(0,0,0,0)')
             st.plotly_chart(fig_cpa, use_container_width=True)
+            if not _is_monetary:
+                _top_cpa_ch = cpa_sorted.iloc[-1]['チャネル']
+                st.caption(f'CPAが最も低いのは【{_top_cpa_ch}】です。')
 
         # ── 貢献CV数バー（count mode のみ） ─────────────────────────────
         if not _is_monetary and valid_df['貢献CV数'].sum() > 0:
