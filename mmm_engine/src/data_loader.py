@@ -128,6 +128,8 @@ _CH_BRAND_NAMES: dict[str, str] = {
     'Youtube':  'YouTube',
     'Tiktok':   'TikTok',
     'Linkedin': 'LinkedIn',
+    'Line':     'LINE',
+    'Seo':      'SEO',
 }
 
 
@@ -140,6 +142,27 @@ def _ch_title(name: str) -> str:
 
 
 CHANNEL_KEYWORDS: dict = {_ch_title(k): v for k, v in _CHANNEL_KEYWORDS_RAW.items()}
+
+# クライアント専用チャネル（UIドロップダウンから除外）
+_CLIENT_SPECIFIC_KEYS: frozenset = frozenset({
+    # 秤クライアント: デバイス別分割
+    'SEM_PC', 'SEM_MOBILE', 'SEM_TABLET',
+    'MOVIE_PC', 'MOVIE_MOBILE', 'MOVIE_TABLET',
+    'DEMAND_PC', 'DEMAND_MOBILE', 'DEMAND_TABLET',
+    'Pmax_PC', 'Pmax_MOBILE', 'Pmax_TABLET',
+    # 秤クライアント: Xキャンペーンタイプ分割
+    'X_XT_en', 'X_XT', 'X_LP_en', 'X_LP',
+    'X_MV_en', 'X_MV', 'X_TDL_en', 'X_TDL', 'X_OTHER_en', 'X_OTHER',
+    # CORDERクライアント専用
+    'K_BUKKA', 'K_PLAZA', 'KEICHO', 'BSIJ', 'SALES_AD', 'KC_SEKISAN', 'KC_CONST_PRICE',
+})
+
+# UIドロップダウン用: 汎用チャネルのみ（クライアント専用を除外）
+GENERIC_CHANNEL_KEYWORDS: dict = {
+    _ch_title(k): v
+    for k, v in _CHANNEL_KEYWORDS_RAW.items()
+    if k not in _CLIENT_SPECIFIC_KEYS
+}
 
 # Role detection keywords (Japanese only — romaji variants are auto-generated at module load)
 COST_KW   = ['cost', 'コスト', '費用', '出稿費', 'spend', '支出', '金額', 'amt', 'amount', '円', 'budget']

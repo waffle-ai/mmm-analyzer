@@ -762,7 +762,21 @@ def run(excel_path: str,
         'cv_lift_pct_b':  opt_result_b['cv_lift_pct'],
         'budget_increase': budget_increase,
         'max_efficient_budget': frontier['max_efficient_budget'],
-        'threshold_cpa':  frontier['threshold_cpa'],
+        'threshold_cpa':  frontier.get('threshold_cpa'),
+        'threshold_roi':  frontier.get('threshold_roi'),
+        'cv_metric_type': final_metrics.get('cv_metric_type', 'count'),
+        'media_fraction': final_metrics.get('media_fraction', 0.0),
+        'baseline_fraction': final_metrics.get('baseline_fraction', 0.0),
+        'frontier_curve': frontier.get('curve', []),
+        'channel_opt': {
+            ch: {
+                'optimal_spend': v.get('optimal_spend', 0.0),
+                'delta_spend':   v.get('delta_spend', 0.0),
+                'optimal_cv':    v.get('optimal_cv', 0.0),
+                'action':        v.get('action', ''),
+            }
+            for ch, v in opt_result.get('channel_opt', {}).items()
+        },
         'channels': {
             ch: {
                 'cpa':              cm['cpa'],

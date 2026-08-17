@@ -1,17 +1,24 @@
 # -*- coding: utf-8 -*-
 """汎用チャネル定義。
-既存エンジンの CHANNEL_KEYWORDS（秤社特化24ch）を国内主要チャネルで拡張する。
-"""
-from mmm_engine.src.data_loader import CHANNEL_KEYWORDS as _BASE
+エンジンの CHANNEL_KEYWORDS（全チャネル）を UI 用に分離管理する。
 
-# _BASE に存在しないチャネルのみを追加（_BASE はすでに engine 側で Title_Case 変換済み）
+- CHANNEL_KEYWORDS_EXT : エンジン自動検出用（全チャネル）
+- CHANNEL_OPTIONS      : UI ドロップダウン用（汎用チャネルのみ）
+"""
+from mmm_engine.src.data_loader import (
+    CHANNEL_KEYWORDS as _BASE,
+    GENERIC_CHANNEL_KEYWORDS as _GENERIC,
+)
+
+# エンジン自動検出用は全チャネルを維持（秤・CORDER 専用も含む）
 _EXTENDED = {
-    'Criteo':   ['criteo', 'クリテオ'],
-    'Naver':    ['naver', 'naver_blog'],
+    'Criteo': ['criteo', 'クリテオ'],
+    'Naver':  ['naver', 'naver_blog'],
 }
 
-# ベース（秤社特化）+ 汎用拡張を結合（_BASE はすでに Title_Case）
 CHANNEL_KEYWORDS_EXT: dict = {**_BASE, **_EXTENDED}
 
-# UIのドロップダウン用: チャネル名リスト（「未マッピング」を先頭に追加）
-CHANNEL_OPTIONS: list[str] = ['（未マッピング）'] + list(CHANNEL_KEYWORDS_EXT.keys())
+# UIドロップダウン用: 汎用チャネル + 拡張チャネルのみ
+# 秤クライアント専用（SEM_PC/MOBILE/TABLET, MOVIE_*, DEMAND_*, Pmax_*, X_XT/LP/MV/TDL/OTHER 系）
+# および CORDER クライアント専用（K_PLAZA, BSIJ 等）は除外済み
+CHANNEL_OPTIONS: list[str] = ['（未マッピング）'] + list({**_GENERIC, **_EXTENDED}.keys())

@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 _HERE = Path(__file__).parent
-sys.path.insert(0, str(_HERE.parent))  # repo root
+sys.path.insert(0, str(_HERE.parent))
 
 import pandas as pd
 import streamlit as st
@@ -12,8 +12,7 @@ import streamlit as st
 from channel_ext import CHANNEL_OPTIONS
 import runner
 
-st.caption('Step 2 / 3')
-st.title('マッピング確認・修正')
+st.title('マッピング設定')
 
 # ── 前ページからのデータ確認 ─────────────────────────────────────────
 if not st.session_state.get('detect_result'):
@@ -21,139 +20,245 @@ if not st.session_state.get('detect_result'):
     st.page_link('pages/1_アップロード.py', label='← アップロードページへ')
     st.stop()
 
+_is_demo    = st.session_state.get('demo_mode', False)
 detect_result = st.session_state['detect_result']
 mapping       = detect_result['mapping']
 excel_path    = st.session_state['excel_tmp_path']
 client_name   = st.session_state['client_name']
 
-st.markdown(f'**クライアント:** {client_name} ｜ **シート:** {detect_result["sheet_name"]} ｜ **{detect_result["n_rows"]}行** ｜ **頻度:** {detect_result["freq_guess"]}')
-st.divider()
-
-# ── DATE/CV列の確認 ──────────────────────────────────────────────────
-col1, col2 = st.columns(2)
-with col1:
-    date_col = st.text_input('DATE列', value=mapping.get('date_col', ''), help='日付が入っている列名')
-with col2:
-    cv_col = st.text_input('CV列（目的変数）', value=mapping.get('cv_col', ''), help='コンバージョン数が入っている列名')
-
-st.divider()
-
-# ── チャネルマッピングテーブル ────────────────────────────────────────
-st.subheader('チャネルマッピング')
-st.info(
-    '自動検出の結果です。内容を確認し、問題なければ**このままページ下の「分析を開始する」を押してOKです。**'
-    '　チャネル名や役割を変更したい場合はドロップダウンで修正できます。'
-    '「（未マッピング）」にするとそのチャネルは分析から除外されます。'
+# ── デモバナー ────────────────────────────────────────────────────────
+st.markdown(
+    f'**プロジェクト**　{client_name}'
+    f'　｜　**シート**　{detect_result["sheet_name"]}'
+    f'　｜　**{detect_result["n_rows"]}行**'
+    f'　｜　**頻度**　{detect_result["freq_guess"]}'
 )
 
-channel_map = mapping.get('channel_map', {})
-
-# テーブル化: 列名・役割・チャネル名（コスト列）・チャネル名（メディア列）
-rows = []
-for ch, m in channel_map.items():
-    if m.get('cost'):
-        rows.append({'列名': m['cost'], '役割': 'コスト', 'チャネル名': ch, '検出スコア': m.get('cost_score', 0)})
-    if m.get('media'):
-        rows.append({'列名': m['media'], '役割': 'メディア', 'チャネル名': ch, '検出スコア': m.get('media_score', 0)})
-
-# 未マッピング列も表示
-for col in mapping.get('unmapped', []):
-    rows.append({'列名': col, '役割': '（未確定）', 'チャネル名': '（未マッピング）', '検出スコア': 0.0})
-
-if rows:
-    df = pd.DataFrame(rows)
-    edited = st.data_editor(
-        df,
-        column_config={
-            'チャネル名': st.column_config.SelectboxColumn(
-                'チャネル名',
-                options=CHANNEL_OPTIONS,
-                required=True,
-            ),
-            '役割': st.column_config.SelectboxColumn(
-                '役割',
-                options=['コスト', 'メディア', '（未確定）'],
-                required=True,
-            ),
-            '検出スコア': st.column_config.NumberColumn('スコア', format='%.2f', disabled=True),
-            '列名': st.column_config.TextColumn('元の列名', disabled=True),
-        },
-        hide_index=True,
-        use_container_width=True,
-        num_rows='dynamic',
-    )
-else:
-    st.warning('マッピングされた列が見つかりませんでした。Excelの列名を確認してください。')
-    edited = pd.DataFrame()
-
 st.divider()
 
-# ── 分析設定 ──────────────────────────────────────────────────────────
-st.subheader('分析設定')
-col_a, col_b, col_c = st.columns(3)
-with col_a:
-    n_trials = st.number_input(
-        'パレート探索試行数',
-        min_value=50, max_value=5000, value=2000, step=50,
-        help='本番: 2000。動作テスト用: 50。少ないほど速いが精度が下がります。',
+if True:  # 以前のタブを廃止し直接レンダリング
+
+    st.markdown("""
+    <style>
+    .lbl-q { display:inline-flex; align-items:center; gap:5px; font-size:14px; font-weight:600;
+             margin-bottom:2px; }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # ── DATE/CV 列の確認 ─────────────────────────────────────────
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown(
+            '<div class="lbl-q">DATE列'
+            '<span class="lq">?<span class="lq-tip">日付が入っている列名。'
+            'YYYY-MM-DD 形式または Excel 日付シリアルを自動認識します。</span></span></div>',
+            unsafe_allow_html=True,
+        )
+        date_col = st.text_input('DATE列', value=mapping.get('date_col', ''), label_visibility='collapsed')
+    with col2:
+        st.markdown(
+            '<div class="lbl-q">目的変数の列'
+            '<span class="lq">?<span class="lq-tip">CVや売上など、予測したい成果数値が入っている列名。'
+            'モデルが最適化する目標値です。</span></span></div>',
+            unsafe_allow_html=True,
+        )
+        cv_col = st.text_input('目的変数の列', value=mapping.get('cv_col', ''), label_visibility='collapsed')
+
+    st.divider()
+
+    # ── チャネルマッピングテーブル ────────────────────────────────
+    st.subheader('チャネルマッピング')
+    st.info(
+        '自動検出の結果です。内容を確認し、問題なければ**このままページ下の「分析を開始する」を押してOKです。**'
+        '　チャネル名や役割を変更したい場合はドロップダウンで修正できます。'
+        '「（未マッピング）」にするとそのチャネルは分析から除外されます。'
     )
-with col_b:
-    report_type = st.selectbox('レポートタイプ', ['full（フルレポート）', 'simple（簡易版）'])
-    report_type_val = 'full' if 'full' in report_type else 'simple'
-with col_c:
-    budget_increase = st.number_input(
-        'シナリオB増額率 (%)',
-        min_value=10, max_value=100, value=30, step=5,
-        help='予算最適化シナリオBの増額率。デフォルト30%。',
-    ) / 100
 
-st.divider()
+    def _match_badge(score: float) -> str:
+        if score >= 0.8:
+            return '◯'
+        if score > 0:
+            return '△'
+        return '—'
 
-# ── 所要時間の目安 ─────────────────────────────────────────────────────
-if not edited.empty:
-    n_active_ch = edited[
-        (edited['チャネル名'] != '（未マッピング）') & (edited['役割'] != '（未確定）')
-    ]['チャネル名'].nunique()
-    if n_active_ch > 0:
-        est = runner.estimate_duration(int(n_trials), n_active_ch)
-        st.info(f'試行数 {int(n_trials):,} × {n_active_ch} チャネル ＝ 処理時間の目安 **{est}**（使用PCのスペックによって変動します）')
+    channel_map = mapping.get('channel_map', {})
+    rows = []
+    for ch, m in channel_map.items():
+        if m.get('cost'):
+            rows.append({'列名': m['cost'], '役割': 'コスト', 'チャネル名': ch,
+                         'マッチ度': _match_badge(m.get('cost_score', 0))})
+        if m.get('media'):
+            rows.append({'列名': m['media'], '役割': 'メディア', 'チャネル名': ch,
+                         'マッチ度': _match_badge(m.get('media_score', 0))})
+    for col in mapping.get('unmapped', []):
+        rows.append({'列名': col, '役割': '（未確定）', 'チャネル名': '（未マッピング）', 'マッチ度': '—'})
 
-# ── 分析開始ボタン ────────────────────────────────────────────────────
-if st.button('分析を開始する →', type='primary', disabled=edited.empty):
-    # mapping_overrideを構築
-    new_channel_map: dict = {}
-    for _, row in edited.iterrows():
-        ch   = row['チャネル名']
-        role = row['役割']
-        col  = row['列名']
-        if ch == '（未マッピング）' or role == '（未確定）':
-            continue
-        if ch not in new_channel_map:
-            new_channel_map[ch] = {'media': None, 'cost': None, 'media_score': 0, 'cost_score': 0}
-        if role == 'コスト':
-            new_channel_map[ch]['cost'] = col
-        elif role == 'メディア':
-            new_channel_map[ch]['media'] = col
+    if rows:
+        _ROLE_OPTS = ['コスト', 'メディア', '（未確定）']
 
-    mapping_override = {
-        'date_col':    date_col or mapping.get('date_col'),
-        'cv_col':      cv_col or mapping.get('cv_col'),
-        'channel_map': new_channel_map,
-        'control_cols': mapping.get('control_cols', []),
-        'unmapped':    [],
-    }
-
-    with st.spinner('分析ジョブを起動中...'):
-        job_info = runner.start_analysis(
-            excel_path=excel_path,
-            client_name=client_name,
-            mapping_override=mapping_override,
-            n_trials=int(n_trials),
-            report_type=report_type_val,
-            budget_increase=budget_increase,
+        st.markdown("""<style>
+        .mp-hdr{display:grid;grid-template-columns:2fr 2fr 1.4fr 0.6fr;
+                gap:0 12px;padding:6px 4px;
+                background:#F3F7F4;border-radius:6px 6px 0 0;
+                border:1px solid #DAEBE5;border-bottom:none;margin-bottom:0;}
+        .mp-hdr span{font-size:11px;font-weight:600;color:#5C9291;
+                     text-transform:uppercase;letter-spacing:.06em;}
+        </style>""", unsafe_allow_html=True)
+        st.markdown(
+            '<div class="mp-hdr">'
+            '<span>元の列名</span><span>チャネル名</span>'
+            '<span>役割</span>'
+            '<span style="text-align:center;">マッチ度'
+            '<span class="lq" style="margin-left:3px;">?<span class="lq-tip">'
+            '◯＝スコア80%以上・△＝一致度が低い・—＝未マッチ</span></span></span>'
+            '</div>',
+            unsafe_allow_html=True,
         )
 
-    st.session_state['job_info']         = job_info
-    st.session_state['mapping_override'] = mapping_override
-    st.success('分析を開始しました！')
-    st.page_link('pages/3_結果.py', label='結果ページへ →')
+        updated_rows = []
+        for i, row in enumerate(rows):
+            c1, c2, c3, c4 = st.columns([2, 2, 1.4, 0.6])
+            with c1:
+                st.text_input('col', value=row['列名'], disabled=True,
+                              key=f'col_{i}', label_visibility='collapsed')
+            with c2:
+                default_ch = row['チャネル名'] if row['チャネル名'] in CHANNEL_OPTIONS else CHANNEL_OPTIONS[0]
+                ch_name = st.selectbox('ch', CHANNEL_OPTIONS,
+                                       index=CHANNEL_OPTIONS.index(default_ch),
+                                       key=f'ch_{i}', label_visibility='collapsed')
+            with c3:
+                default_role = row['役割'] if row['役割'] in _ROLE_OPTS else _ROLE_OPTS[0]
+                role = st.selectbox('role', _ROLE_OPTS,
+                                    index=_ROLE_OPTS.index(default_role),
+                                    key=f'role_{i}', label_visibility='collapsed')
+            with c4:
+                st.markdown(
+                    f'<div style="padding:6px 0 0;text-align:center;font-size:14px;">'
+                    f'{row["マッチ度"]}</div>',
+                    unsafe_allow_html=True,
+                )
+            updated_rows.append({'列名': row['列名'], 'チャネル名': ch_name,
+                                  '役割': role, 'マッチ度': row['マッチ度']})
+
+        edited = pd.DataFrame(updated_rows)
+    else:
+        st.warning('マッピングされた列が見つかりませんでした。Excelの列名を確認してください。')
+        edited = pd.DataFrame()
+
+    st.divider()
+
+    # ── 分析設定 ─────────────────────────────────────────────────
+    n_trials        = 2000
+    report_type_val = 'full'
+    budget_increase = 0.3
+
+    st.subheader('分析設定')
+    col_a, col_b, col_c = st.columns(3)
+    with col_a:
+        st.markdown(
+            '<div class="lbl-q">パレート探索試行数'
+            '<span class="lq">?<span class="lq-tip">'
+            '本番は2000が目安。動作確認なら50でOK。少ないほど速いが精度は下がります。'
+            '</span></span></div>',
+            unsafe_allow_html=True,
+        )
+        n_trials = st.number_input(
+            'パレート探索試行数',
+            min_value=50, max_value=5000, value=2000, step=50,
+            label_visibility='collapsed',
+        )
+    with col_b:
+        report_type = st.selectbox('レポートタイプ', ['full（フルレポート）', 'simple（簡易版）'])
+        report_type_val = 'full' if 'full' in report_type else 'simple'
+    with col_c:
+        st.markdown(
+            '<div class="lbl-q">シナリオB増額率 (%)'
+            '<span class="lq">?<span class="lq-tip">'
+            '予算最適化シナリオBで何%増額した場合を試算するか。デフォルトは30%。'
+            '</span></span></div>',
+            unsafe_allow_html=True,
+        )
+        budget_increase = st.number_input(
+            'シナリオB増額率 (%)',
+            min_value=10, max_value=100, value=30, step=5,
+            label_visibility='collapsed',
+        ) / 100
+
+    st.divider()
+
+    if not _is_demo and not edited.empty:
+        n_active_ch = edited[
+            (edited['チャネル名'] != '（未マッピング）') & (edited['役割'] != '（未確定）')
+        ]['チャネル名'].nunique()
+        if n_active_ch > 0:
+            est = runner.estimate_duration(int(n_trials), n_active_ch)
+            st.info(
+                f'試行数 {int(n_trials):,} × {n_active_ch} チャネル'
+                f' ＝ 処理時間の目安 **{est}**（使用PCのスペックによって変動します）'
+            )
+
+    # ── 分析開始ボタン ────────────────────────────────────────────
+    if st.button('分析を開始する →', type='primary', disabled=edited.empty):
+
+        # mapping_override を構築（デモ・通常共通）
+        new_channel_map: dict = {}
+        for _, row in edited.iterrows():
+            ch   = row['チャネル名']
+            role = row['役割']
+            col_name = row['列名']
+            if ch == '（未マッピング）' or role == '（未確定）':
+                continue
+            if ch not in new_channel_map:
+                new_channel_map[ch] = {'media': None, 'cost': None, 'media_score': 0, 'cost_score': 0}
+            if role == 'コスト':
+                new_channel_map[ch]['cost'] = col_name
+            elif role == 'メディア':
+                new_channel_map[ch]['media'] = col_name
+
+        mapping_override = {
+            'date_col':    date_col or mapping.get('date_col'),
+            'cv_col':      cv_col or mapping.get('cv_col'),
+            'channel_map': new_channel_map,
+            'control_cols': mapping.get('control_cols', []),
+            'unmapped':    [],
+        }
+        st.session_state['mapping_override'] = mapping_override
+
+        if _is_demo:
+            import time
+            _stages = [
+                (5,   'データを読み込み中...',                0.5),
+                (15,  '前処理・特徴量エンジニアリング中...',   1.0),
+                (30,  'パレート探索を実行中 (1/3)...',        1.5),
+                (50,  'パレート探索を実行中 (2/3)...',        1.8),
+                (68,  'L-BFGS-B 最適化中...',               2.0),
+                (82,  '予算最適化シナリオを計算中...',         1.5),
+                (93,  'レポートを生成中...',                  1.2),
+                (100, '分析完了！',                           0.5),
+            ]
+            _bar = st.progress(0, text='分析を準備中...')
+            _prev = 0
+            for _pct, _label, _dur in _stages:
+                _steps = max(1, _pct - _prev)
+                _step_sleep = _dur / _steps
+                for _s in range(1, _steps + 1):
+                    _bar.progress(_prev + _s, text=_label)
+                    time.sleep(_step_sleep)
+                _prev = _pct
+            time.sleep(0.3)
+            st.switch_page('pages/summary.py')
+        else:
+            with st.spinner('分析ジョブを起動中...'):
+                job_info = runner.start_analysis(
+                    excel_path=excel_path,
+                    client_name=client_name,
+                    mapping_override=mapping_override,
+                    n_trials=int(n_trials),
+                    report_type=report_type_val,
+                    budget_increase=budget_increase,
+                )
+            st.session_state['job_info'] = job_info
+            st.switch_page('pages/summary.py')
+
+st.divider()
+st.page_link('pages/2b_preview.py', label='データプレビューを確認する →')
