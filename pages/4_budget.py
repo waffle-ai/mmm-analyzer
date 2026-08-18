@@ -25,7 +25,7 @@ st.markdown("""
      padding:12px 16px;margin-bottom:20px;">
   <span style="color:#314858;font-size:15px;">
     現在の予算配分をROI比例に最適化した場合のCV改善量と、
-    媒体ごとの増減額（Before/After）が分かります。
+    チャネルごとの増減額（Before/After）が分かります。
   </span>
 </div>""", unsafe_allow_html=True)
 
@@ -61,7 +61,7 @@ def _pct_str(v):
 
 channels, _dup_warn = r.dedup_channels(summary.get('channels', {}))
 if _dup_warn:
-    st.warning('同名の可能性がある媒体が複数あります。マッピングを確認して再実行してください（' + '、'.join(_dup_warn) + '）。')
+    st.warning('同名の可能性があるチャネルが複数あります。マッピングを確認して再実行してください（' + '、'.join(_dup_warn) + '）。')
 _total_cv   = summary.get('total_cv', 0)
 _cv_lift    = summary.get('cv_lift_pct', 0)
 _cv_lift_b  = summary.get('cv_lift_pct_b', 0)
@@ -76,17 +76,17 @@ _eff_label   = 'ROAS / ROI' if _is_monetary else 'CPA'
 _eff_unit    = '%' if _is_monetary else '円'
 
 if not _ch_valid:
-    st.warning('有効な媒体が見つかりません。')
+    st.warning('有効なチャネルが見つかりません。')
     st.stop()
 
 if _is_monetary:
     valid_df = pd.DataFrame([
-        {'媒体': ch, 'EFF': round(v.get('roi', 0) * 100, 1), '広告費 (万円)': round(v.get('spend_man', 0), 1)}
+        {'チャネル': ch, 'EFF': round(v.get('roi', 0) * 100, 1), '広告費 (万円)': round(v.get('spend_man', 0), 1)}
         for ch, v in _ch_valid.items()
     ]).sort_values('EFF', ascending=False).rename(columns={'EFF': _eff_label})
 else:
     valid_df = pd.DataFrame([
-        {'媒体': ch, 'EFF': int(v.get('cpa', 0) or 0), '広告費 (万円)': round(v.get('spend_man', 0), 1)}
+        {'チャネル': ch, 'EFF': int(v.get('cpa', 0) or 0), '広告費 (万円)': round(v.get('spend_man', 0), 1)}
         for ch, v in _ch_valid.items()
     ]).sort_values('EFF', ascending=True).rename(columns={'EFF': _eff_label})
 
@@ -129,7 +129,7 @@ _channel_opt = summary.get('channel_opt', {})
 
 sim_df = valid_df.copy()
 if _channel_opt:
-    sim_df['最適配分 (万円)'] = sim_df['媒体'].map(
+    sim_df['最適配分 (万円)'] = sim_df['チャネル'].map(
         lambda ch: round(_channel_opt.get(ch, {}).get('optimal_spend', 0) / 10000, 1)
     )
 else:
@@ -146,13 +146,13 @@ sim_df['差分 (万円)'] = (sim_df['最適配分 (万円)'] - sim_df['広告費
 _opt_label = '最適配分（SLSQP）' if _channel_opt else f'最適配分（{_eff_label}最適化）'
 
 compare_df = pd.DataFrame({
-    '媒体':      valid_df['媒体'].tolist() * 2,
+    'チャネル':      valid_df['チャネル'].tolist() * 2,
     '広告費 (万円)': valid_df['広告費 (万円)'].tolist() + sim_df['最適配分 (万円)'].tolist(),
     '配分':          ['現状'] * len(valid_df) + [_opt_label] * len(sim_df),
 })
 fig_bar = px.bar(
     compare_df,
-    x='媒体', y='広告費 (万円)', color='配分',
+    x='チャネル', y='広告費 (万円)', color='配分',
     barmode='group',
     color_discrete_map={'現状': _COL_LIGHT, _opt_label: _COL_PRIMARY},
     labels={'広告費 (万円)': '広告費（万円）'},
@@ -175,11 +175,11 @@ def _diff_color(x, is_monetary):
     if good:
         return 'color: #315E6D; font-weight: 600;'
     if bad:
-        return 'color: #5C9291; font-weight: 600;'
+        return 'color: #CB8013; font-weight: 600;'
     return ''
 
 st.caption(f'現状 vs {_opt_label} の差分')
-disp_sim = sim_df[['媒体', _eff_label, '広告費 (万円)', '最適配分 (万円)', '差分 (万円)']].copy()
+disp_sim = sim_df[['チャネル', _eff_label, '広告費 (万円)', '最適配分 (万円)', '差分 (万円)']].copy()
 st.dataframe(
     disp_sim.style.map(
         lambda x: _diff_color(x, _is_monetary),
@@ -192,7 +192,7 @@ st.dataframe(
 st.divider()
 
 # ── 円グラフ（現状 vs 最適）───────────────────────────────────────────────
-ch_order = valid_df['媒体'].tolist()
+ch_order = valid_df['チャネル'].tolist()
 
 def _grad_n(n, c0='#A2CEBF', c1='#315E6D'):
     if n == 1: return [c1]
@@ -207,7 +207,7 @@ with col_l:
     st.markdown('**現状の広告費配分**')
     fig_cur = go.Figure(go.Pie(
         labels=ch_order,
-        values=valid_df.set_index('媒体').loc[ch_order, '広告費 (万円)'].tolist(),
+        values=valid_df.set_index('チャネル').loc[ch_order, '広告費 (万円)'].tolist(),
         hole=0.4,
         marker_colors=ch_colors,
         sort=False,
@@ -221,7 +221,7 @@ with col_r:
     st.markdown(f'**{_opt_label}（シミュレーション）**')
     fig_sim = go.Figure(go.Pie(
         labels=ch_order,
-        values=sim_df.set_index('媒体').loc[ch_order, '最適配分 (万円)'].tolist(),
+        values=sim_df.set_index('チャネル').loc[ch_order, '最適配分 (万円)'].tolist(),
         hole=0.4,
         marker_colors=ch_colors,
         sort=False,

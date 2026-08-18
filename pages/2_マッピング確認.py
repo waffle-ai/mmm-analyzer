@@ -16,9 +16,8 @@ st.title('マッピング設定')
 
 # ── 前ページからのデータ確認 ─────────────────────────────────────────
 if not st.session_state.get('detect_result'):
-    st.markdown('データを読み込むと、ここで列の対応を確認できます。')
-    if st.button('データを読み込む', type='primary'):
-        st.switch_page('pages/1_アップロード.py')
+    st.warning('先にExcelをアップロードしてください。')
+    st.page_link('pages/1_アップロード.py', label='← アップロードページへ')
     st.stop()
 
 _is_demo    = st.session_state.get('demo_mode', False)
@@ -83,25 +82,25 @@ if True:  # 以前のタブを廃止し直接レンダリング
         ) if _date_opts else ''
     with col2:
         st.markdown(
-            '<div class="lbl-q">CV列'
-            '<span class="lq">?<span class="lq-tip">成果（CV数や売上）が入っている列'
-            '</span></span></div>',
+            '<div class="lbl-q">目的変数の列'
+            '<span class="lq">?<span class="lq-tip">CVや売上など、予測したい成果数値が入っている列名。'
+            'モデルが最適化する目標値です。</span></span></div>',
             unsafe_allow_html=True,
         )
         cv_col = st.selectbox(
-            'CV列', _cv_opts,
+            '目的変数の列', _cv_opts,
             index=_cv_opts.index(_cv_default) if _cv_default in _cv_opts else 0,
             label_visibility='collapsed',
         ) if _cv_opts else ''
 
     st.divider()
 
-    # ── 媒体マッピングテーブル ────────────────────────────────────
-    st.subheader('媒体マッピング')
+    # ── チャネルマッピングテーブル ────────────────────────────────
+    st.subheader('チャネルマッピング')
     st.info(
         '自動検出の結果です。内容を確認し、問題なければ**このままページ下の「分析を開始する」を押してOKです。**'
-        '　媒体名や役割を変更したい場合はドロップダウンで修正できます。'
-        '「（未マッピング）」にするとその媒体は分析から除外されます。'
+        '　チャネル名や役割を変更したい場合はドロップダウンで修正できます。'
+        '「（未マッピング）」にするとそのチャネルは分析から除外されます。'
     )
 
     def _match_badge(score: float) -> str:
@@ -115,13 +114,13 @@ if True:  # 以前のタブを廃止し直接レンダリング
     rows = []
     for ch, m in channel_map.items():
         if m.get('cost'):
-            rows.append({'列名': m['cost'], '役割': 'コスト', '媒体名': ch,
+            rows.append({'列名': m['cost'], '役割': 'コスト', 'チャネル名': ch,
                          'マッチ度': _match_badge(m.get('cost_score', 0))})
         if m.get('media'):
-            rows.append({'列名': m['media'], '役割': 'メディア', '媒体名': ch,
+            rows.append({'列名': m['media'], '役割': 'メディア', 'チャネル名': ch,
                          'マッチ度': _match_badge(m.get('media_score', 0))})
     for col in mapping.get('unmapped', []):
-        rows.append({'列名': col, '役割': '（未確定）', '媒体名': '（未マッピング）', 'マッチ度': '—'})
+        rows.append({'列名': col, '役割': '（未確定）', 'チャネル名': '（未マッピング）', 'マッチ度': '—'})
 
     if rows:
         _ROLE_OPTS = ['コスト', 'メディア', '（未確定）']
@@ -136,7 +135,7 @@ if True:  # 以前のタブを廃止し直接レンダリング
         </style>""", unsafe_allow_html=True)
         st.markdown(
             '<div class="mp-hdr">'
-            '<span>元の列名</span><span>媒体名</span>'
+            '<span>元の列名</span><span>チャネル名</span>'
             '<span>役割</span>'
             '<span style="text-align:center;">マッチ度'
             '<span class="lq" style="margin-left:3px;">?<span class="lq-tip">'
@@ -152,7 +151,7 @@ if True:  # 以前のタブを廃止し直接レンダリング
                 st.text_input('col', value=row['列名'], disabled=True,
                               key=f'col_{i}', label_visibility='collapsed')
             with c2:
-                default_ch = row['媒体名'] if row['媒体名'] in CHANNEL_OPTIONS else CHANNEL_OPTIONS[0]
+                default_ch = row['チャネル名'] if row['チャネル名'] in CHANNEL_OPTIONS else CHANNEL_OPTIONS[0]
                 ch_name = st.selectbox('ch', CHANNEL_OPTIONS,
                                        index=CHANNEL_OPTIONS.index(default_ch),
                                        key=f'ch_{i}', label_visibility='collapsed')
@@ -167,7 +166,7 @@ if True:  # 以前のタブを廃止し直接レンダリング
                     f'{row["マッチ度"]}</div>',
                     unsafe_allow_html=True,
                 )
-            updated_rows.append({'列名': row['列名'], '媒体名': ch_name,
+            updated_rows.append({'列名': row['列名'], 'チャネル名': ch_name,
                                   '役割': role, 'マッチ度': row['マッチ度']})
 
         edited = pd.DataFrame(updated_rows)
@@ -227,13 +226,13 @@ if True:  # 以前のタブを廃止し直接レンダリング
     n_active_ch = 0
     if not edited.empty:
         n_active_ch = edited[
-            (edited['媒体名'] != '（未マッピング）') & (edited['役割'] != '（未確定）')
-        ]['媒体名'].nunique()
+            (edited['チャネル名'] != '（未マッピング）') & (edited['役割'] != '（未確定）')
+        ]['チャネル名'].nunique()
 
     if not _is_demo and n_active_ch > 0:
         est = runner.estimate_duration(int(n_trials), n_active_ch)
         st.info(
-            f'試行数 {int(n_trials):,} × {n_active_ch} 媒体'
+            f'試行数 {int(n_trials):,} × {n_active_ch} チャネル'
             f' ＝ 処理時間の目安 **{est}**（使用PCのスペックによって変動します）'
         )
 
@@ -253,7 +252,7 @@ if True:  # 以前のタブを廃止し直接レンダリング
         _missing = '目的変数の列を選択してください'
         st.warning(_missing)
     elif n_active_ch == 0:
-        _missing = '分析に使う媒体を1つ以上選択してください'
+        _missing = '分析に使うチャネルを1つ以上選択してください'
         st.warning(_missing)
     else:
         _missing = None
@@ -266,7 +265,7 @@ if True:  # 以前のタブを廃止し直接レンダリング
         # mapping_override を構築（デモ・通常共通）
         new_channel_map: dict = {}
         for _, row in edited.iterrows():
-            ch   = row['媒体名']
+            ch   = row['チャネル名']
             role = row['役割']
             col_name = row['列名']
             if ch == '（未マッピング）' or role == '（未確定）':

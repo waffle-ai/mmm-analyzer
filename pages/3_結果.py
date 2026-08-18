@@ -32,7 +32,7 @@ st.markdown("""
 <div style="background:#EAF4F0;border-left:4px solid #315E6D;border-radius:0 8px 8px 0;
      padding:12px 16px;margin-bottom:20px;">
   <span style="color:#314858;font-size:15px;">
-    各媒体の費用対効果（ROI・CPA・限界ROI）を横断比較し、
+    各チャネルの費用対効果（ROI・CPA・限界ROI）を横断比較し、
     どこに投資すれば最も効率良くCVを増やせるかが分かります。
   </span>
 </div>""", unsafe_allow_html=True)
@@ -43,9 +43,8 @@ if not st.session_state.get('job_info'):
         st.session_state['job_info'] = _recovered
         st.info('前回のジョブを表示しています。')
     else:
-        st.markdown('データを読み込んで分析を開始すると、ここに媒体別ROIと予算配分の示唆が表示されます。')
-        if st.button('データを読み込む', type='primary'):
-            st.switch_page('pages/1_アップロード.py')
+        st.warning('まだ分析が開始されていません。')
+        st.page_link('pages/1_アップロード.py', label='← アップロードページへ')
         st.stop()
 
 job_info = st.session_state['job_info']
@@ -95,24 +94,6 @@ if status['status'] == 'running':
             pct, label = p, lbl
             break
     prog_ph.progress(pct, text=label)
-
-    # ── 工程チェックリスト ─────────────────────────────────────────────
-    _STAGES = [
-        ('データを読み込む', 5, 13),
-        ('前処理・ベースライン分解', 17, 28),
-        ('モデルを訓練する（最も時間がかかります）', 32, 75),
-        ('予算配分を最適化する', 80, 90),
-        ('レポートを生成する', 95, 100),
-    ]
-    for _name, _lo, _hi in _STAGES:
-        if pct > _hi:
-            st.markdown(f'完了　~~{_name}~~')
-        elif pct >= _lo:
-            st.markdown(f'**実行中　{_name}**')
-            st.caption(label)
-        else:
-            st.markdown(f'未着手　{_name}')
-
     time.sleep(3)
     st.rerun()
 
@@ -142,7 +123,7 @@ else:
 
     channels, _dup_warn = r.dedup_channels(summary.get('channels', {}))
     if _dup_warn:
-        st.warning('同名の可能性がある媒体が複数あります。マッピングを確認して再実行してください（' + '、'.join(_dup_warn) + '）。')
+        st.warning('同名の可能性があるチャネルが複数あります。マッピングを確認して再実行してください（' + '、'.join(_dup_warn) + '）。')
     _ch_valid    = {ch: v for ch, v in channels.items() if not v.get('is_zero', False)}
     _cv_type     = summary.get('cv_metric_type', 'count')
     _is_monetary = _cv_type == 'monetary'
@@ -153,89 +134,94 @@ else:
     def _nrms_lbl(v):  return '◎' if v < 0.10  else '○' if v < 0.12  else '△' if v < 0.15  else '×'
     def _nrmsh_lbl(v): return '◎' if v < 0.15  else '○' if v < 0.20  else '△' if v < 0.25  else '×'
     def _mape_lbl(v):  return '◎' if v < 0.08  else '○' if v < 0.10  else '△' if v < 0.12  else '×'
+    def _badge_cls(l): return {'◎': 'b-s', '○': 'b-a', '△': 'b-b', '×': 'b-c'}.get(l, 'b-c')
 
-    r2_l = _r2_lbl(_r2)
-    nt_l = _nrms_lbl(_nrmse_t)
-    nh_l = _nrmsh_lbl(_nrmse_h)
-    mp_l = _mape_lbl(_mape)
+    r2_l = _r2_lbl(_r2);    r2_c  = _badge_cls(r2_l)
+    nt_l = _nrms_lbl(_nrmse_t); nt_c = _badge_cls(nt_l)
+    nh_l = _nrmsh_lbl(_nrmse_h); nh_c = _badge_cls(nh_l)
+    mp_l = _mape_lbl(_mape); mp_c = _badge_cls(mp_l)
 
-    # ── 判定文 ───────────────────────────────────────────────────────────
-    _sat_candidates = {
-        ch: v for ch, v in channels.items()
-        if not v.get('is_zero', False) and v.get('saturation_label') in ('伸び代あり', '適正域')
+    cv_cls  = 'kpi-up'    if _cv_lift   >= 0 else ''
+    cvb_cls = 'kpi-amber' if _cv_lift_b >  0 else ''
+
+    # ── KPI ストリップ（ホバーツールチップ付き）──────────────────────────
+    st.markdown("""<style>
+    .kpi-row{display:flex;gap:1px;background:#C5DFD9;border-radius:10px;overflow:visible;margin-bottom:24px;}
+    .kpi-cell{flex:1;background:#F9FDFC;padding:12px 14px;min-width:0;position:relative;cursor:default;}
+    .kpi-row .kpi-cell:first-child{border-radius:10px 0 0 10px;}
+    .kpi-row .kpi-cell:last-child{border-radius:0 10px 10px 0;}
+    .kpi-lbl{font-size:10px;color:#5C9291;text-transform:uppercase;letter-spacing:.08em;
+             white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .kpi-val{font-size:19px;font-weight:700;color:#314858;line-height:1.3;margin-top:3px;
+             display:flex;align-items:center;gap:6px;}
+    .kpi-badge{font-size:10px;padding:2px 6px;border-radius:3px;flex-shrink:0;line-height:1.5;}
+    .b-s{background:#315E6D;color:#fff;}
+    .b-a{background:#7EBEAB;color:#314858;}
+    .b-b{background:#CB8013;color:#fff;}
+    .b-c{background:#999;color:#fff;}
+    .kpi-up{color:#315E6D!important;}
+    .kpi-amber{color:#CB8013!important;}
+    .kpi-tip{
+        visibility:hidden;opacity:0;
+        position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);
+        background:#314858;color:#F3F7F4;font-size:11.5px;padding:10px 14px;
+        border-radius:6px;width:230px;z-index:9999;
+        transition:opacity 0.15s;pointer-events:none;
+        white-space:normal;line-height:1.55;
+        box-shadow:0 4px 12px rgba(0,0,0,.25);
     }
-    _top_candidate = (
-        max(_sat_candidates.items(), key=lambda kv: kv[1].get('roi', 0))
-        if _sat_candidates else None
-    )
+    .kpi-cell:hover .kpi-tip{visibility:visible;opacity:1;}
+    .kpi-row .kpi-cell:first-child .kpi-tip{left:0;transform:none;}
+    .kpi-row .kpi-cell:last-child .kpi-tip{left:auto;right:0;transform:none;}
+    </style>""", unsafe_allow_html=True)
 
-    def _accent(text):
-        return f'<span style="color:#CB8013;font-weight:700;font-size:1.15rem;">{text}</span>'
+    st.markdown(f"""<div class="kpi-row">
+      <div class="kpi-cell">
+        <div class="kpi-lbl">R²（決定係数）</div>
+        <div class="kpi-val">{_r2:.3f}<span class="kpi-badge {r2_c}">{r2_l}</span></div>
+        <div class="kpi-tip">成果の何%をモデルが説明できているかを示します。<br>◎ ≥0.90 &nbsp;○ ≥0.85 &nbsp;△ ≥0.80 &nbsp;× それ未満</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-lbl">NRMSE 学習</div>
+        <div class="kpi-val">{_nrmse_t:.3f}<span class="kpi-badge {nt_c}">{nt_l}</span></div>
+        <div class="kpi-tip">学習データに対する予測誤差（小さいほど良い）。<br>◎ &lt;0.10 &nbsp;○ &lt;0.12 &nbsp;△ &lt;0.15 &nbsp;× それ以上</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-lbl">NRMSE 検証</div>
+        <div class="kpi-val">{_nrmse_h:.3f}<span class="kpi-badge {nh_c}">{nh_l}</span></div>
+        <div class="kpi-tip">未学習データへの予測誤差（汎化性能の指標）。<br>◎ &lt;0.15 &nbsp;○ &lt;0.20 &nbsp;△ &lt;0.25 &nbsp;× それ以上</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-lbl">MAPE</div>
+        <div class="kpi-val">{_mape*100:.1f}%<span class="kpi-badge {mp_c}">{mp_l}</span></div>
+        <div class="kpi-tip">実績値とモデル予測の平均乖離率。<br>◎ &lt;8% &nbsp;○ &lt;10% &nbsp;△ &lt;12% &nbsp;× それ以上</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-lbl">CV 実績</div>
+        <div class="kpi-val">{_total_cv:,}件</div>
+        <div class="kpi-tip">分析期間の合計コンバージョン数（広告起因・ベースライン含む）。</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-lbl">同予算 CV改善</div>
+        <div class="kpi-val {cv_cls}">{_pct_str(_cv_lift)}</div>
+        <div class="kpi-tip">同じ総広告費のまま配分をROI比例に最適化した場合の推定CV増加率。</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-lbl">増額{int(_budget_inc*100)}% CV改善</div>
+        <div class="kpi-val {cvb_cls}">{_pct_str(_cv_lift_b)}</div>
+        <div class="kpi-tip">総広告費を{int(_budget_inc*100)}%増額かつ最適配分した場合の推定CV増加率。</div>
+      </div>
+    </div>""", unsafe_allow_html=True)
 
-    if _top_candidate and _cv_lift >= 3:
-        _v_ch, _v_data = _top_candidate
-        _verdict_html = (
-            f'<strong>{_accent(_v_ch)}への配分を増やすと、同じ予算でCVを増やせる見込みです。</strong>'
-            f' ROI {_v_data.get("roi", 0):.2f}、まだ伸び代があります。'
-        )
-    elif _top_candidate:
-        _v_ch, _v_data = _top_candidate
-        _verdict_html = (
-            '<strong>現在の予算配分はすでに効率的です。</strong>'
-            f' 増額するなら{_accent(_v_ch)}が第一候補です（ROI {_v_data.get("roi", 0):.2f}）。'
-        )
-    else:
-        _verdict_html = (
-            '<strong>全媒体が飽和域にあります。</strong>'
-            ' 現状維持か、予算削減の検討が妥当です。'
-        )
-
-    st.markdown(
-        f'<div style="font-size:1.05rem;line-height:1.8;margin:4px 0 18px;">{_verdict_html}</div>',
-        unsafe_allow_html=True,
-    )
-
-    _action_bullets = []
-    if _top_candidate:
-        _v_ch, _v_data = _top_candidate
-        _action_bullets.append(
-            f'{_v_ch}は{_v_data.get("saturation_label", "")}（ROI {_v_data.get("roi", 0):.2f}）で、配分を増やす候補です。'
-        )
-    _sat_chs_top = [ch for ch, v in channels.items()
-                     if not v.get('is_zero', False) and v.get('saturation_label') == '飽和域']
-    if _sat_chs_top:
-        _action_bullets.append('飽和域の媒体: ' + '、'.join(_sat_chs_top) + '。追加投資の効果は低下しています。')
-    _zero_chs_top = [ch for ch, v in channels.items() if v.get('is_zero', False)]
-    if _zero_chs_top:
-        _action_bullets.append('効果を検出できなかった媒体: ' + '、'.join(_zero_chs_top) + '。マッピングの見直しを推奨します。')
-
-    if _action_bullets:
-        st.markdown('\n'.join(f'- {b}' for b in _action_bullets))
-
-    # ── 効果 ─────────────────────────────────────────────────────────────
-    st.subheader('効果')
-    st.caption(f'CV実績： {_total_cv:,.0f}件（分析期間の合計。広告起因・ベースライン含む）')
-    _col_e1, _col_e2 = st.columns(2)
-    with _col_e1:
-        st.metric('同予算でCVを最適配分した場合', _pct_str(_cv_lift))
-        if _cv_lift >= 0:
-            _cv_after = _total_cv * (1 + _cv_lift / 100)
-            st.caption(f'{_total_cv:,.0f}件 → {_cv_after:,.0f}件')
-    with _col_e2:
-        st.metric(f'総広告費を{int(_budget_inc*100)}%増額した場合', _pct_str(_cv_lift_b))
-        if _cv_lift_b >= 0:
-            _cv_after_b = _total_cv * (1 + _cv_lift_b / 100)
-            st.caption(f'{_total_cv:,.0f}件 → {_cv_after_b:,.0f}件')
-
-    # ── 根拠：媒体 DataFrame ──────────────────────────────────────────────
+    # ── チャネル DataFrame ──────────────────────────────────────────────
     if channels:
         ch_df = pd.DataFrame([
             {
-                '媒体':       ch,
+                'チャネル':       ch,
                 'ROI':           round(v.get('roi', 0), 2),
-                '貢献CV数':      round(v.get('cv_contrib', 0), 1),
-                '広告費 (円)':   int(round(v.get('spend_man', 0) * 10000)),
                 'CPA (円)':      int(v.get('cpa', 0) or 0),
+                '貢献CV数':      round(v.get('cv_contrib', 0), 1),
+                '広告費 (万円)':  round(v.get('spend_man', 0), 1),
                 '飽和度':        v.get('saturation_label', ''),
                 '限界ROI':       round(v.get('marginal_roi', 0), 2),
                 '有効':          not v.get('is_zero', False),
@@ -246,66 +232,48 @@ else:
         valid_df = ch_df[ch_df['有効']].drop(columns=['有効'])
 
         st.divider()
-        st.subheader('根拠：媒体別データ')
-        st.dataframe(
-            valid_df,
-            use_container_width=True,
-            hide_index=True,
-            column_config={
-                'ROI':         st.column_config.NumberColumn('ROI', alignment='right'),
-                '貢献CV数':    st.column_config.NumberColumn('貢献CV数', alignment='right'),
-                '広告費 (円)': st.column_config.NumberColumn('広告費 (円)', format='%,d', alignment='right'),
-                'CPA (円)':    st.column_config.NumberColumn('CPA (円)', format='%,d', alignment='right'),
-                '限界ROI':     st.column_config.NumberColumn('限界ROI', alignment='right'),
-            },
-        )
         st.caption(
             '飽和度: 伸び代あり=増額で効果が見込める / 適正域=現状が効率的 / '
             '飽和域=追加投資しても伸びにくい / 係数ゼロ=効果を検出できず'
         )
 
         if _is_monetary:
-            # ── 貢献CV数バー（monetary mode）── D1推奨媒体をハイライト ──────
-            cv_sorted_m = valid_df[valid_df['貢献CV数'] > 0].sort_values('貢献CV数')
-            _highlight_ch = _top_candidate[0] if _top_candidate else None
-            _cv_bar_colors_m = [
-                '#CB8013' if ch == _highlight_ch else '#317680'
-                for ch in cv_sorted_m['媒体']
-            ]
-            st.subheader('媒体別 貢献CV数')
+            # ── ROAS/ROI バー（monetary mode のみ） ──────────────────────
+            # monetary: roi*100 を % として表示
+            roi_pct_df = valid_df.copy()
+            roi_pct_df['ROAS/ROI (%)'] = (roi_pct_df['ROI'] * 100).round(1)
+            roi_sorted = roi_pct_df.sort_values('ROAS/ROI (%)')
+            st.subheader(f'チャネル別 {_eff_label}')
             fig_roi = px.bar(
-                cv_sorted_m, x='貢献CV数', y='媒体', orientation='h',
-                text='貢献CV数',
-                labels={'貢献CV数': '貢献CV数（件）'},
+                roi_sorted, x='ROAS/ROI (%)', y='チャネル', orientation='h',
+                color='ROAS/ROI (%)',
+                color_continuous_scale=[[0, '#A2CEBF'], [0.5, '#5C9291'], [1.0, '#315E6D']],
+                text='ROAS/ROI (%)',
+                labels={'ROAS/ROI (%)': f'{_eff_label}（%）'},
             )
-            fig_roi.update_traces(
-                marker_color=_cv_bar_colors_m,
-                texttemplate='%{text:.0f}件', textposition='outside', textfont_size=12,
-            )
+            fig_roi.update_traces(texttemplate='%{text:.1f}%', textposition='outside', textfont_size=12)
             fig_roi.update_layout(
+                coloraxis_showscale=False,
                 margin=dict(l=10, r=80, t=10, b=10),
-                height=max(320, len(cv_sorted_m) * 58),
+                height=max(320, len(roi_sorted) * 58),
                 plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
             )
             fig_roi.update_xaxes(gridcolor='#DAEBE5', gridwidth=1)
             fig_roi.update_yaxes(gridcolor='rgba(0,0,0,0)')
             st.plotly_chart(fig_roi, use_container_width=True)
-            _top_roi_ch = valid_df.sort_values('ROI', ascending=False).iloc[0]['媒体']
-            st.caption(
-                f'{_eff_label}が最も高いのは【{_top_roi_ch}】です。'
-                'ただし投資額を増やすと効率は下がるため、推奨は上部の判定文を参照してください。'
-            )
+            _top_roi_ch = roi_sorted.iloc[-1]['チャネル']
+            st.caption(f'{_eff_label}が最も高いのは【{_top_roi_ch}】です。')
 
         # ── CPA バー ────────────────────────────────────────────────────
         # count mode: 主指標として先頭表示 / monetary mode: 補足として表示
         if not _is_monetary:
-            st.subheader(f'媒体別 {_eff_label}（主指標）')
+            st.subheader(f'チャネル別 {_eff_label}（主指標）')
         else:
-            st.subheader('媒体別 CPA（補足）')
+            st.subheader('チャネル別 CPA（補足）')
         cpa_sorted = valid_df[valid_df['CPA (円)'] > 0].sort_values('CPA (円)', ascending=False)
         if not cpa_sorted.empty:
             fig_cpa = px.bar(
-                cpa_sorted, x='CPA (円)', y='媒体', orientation='h',
+                cpa_sorted, x='CPA (円)', y='チャネル', orientation='h',
                 color='CPA (円)',
                 color_continuous_scale=[[0, '#315E6D'], [0.5, '#5C9291'], [1.0, '#A2CEBF']],
                 text='CPA (円)',
@@ -322,32 +290,24 @@ else:
             fig_cpa.update_yaxes(gridcolor='rgba(0,0,0,0)')
             st.plotly_chart(fig_cpa, use_container_width=True)
             if not _is_monetary:
-                _top_cpa_ch = cpa_sorted.iloc[-1]['媒体']
-                st.caption(
-                    f'CPAが最も低いのは【{_top_cpa_ch}】です。'
-                    'ただし投資額を増やすと効率は下がるため、推奨は上部の判定文を参照してください。'
-                )
+                _top_cpa_ch = cpa_sorted.iloc[-1]['チャネル']
+                st.caption(f'CPAが最も低いのは【{_top_cpa_ch}】です。')
 
-        # ── 貢献CV数バー（count mode のみ）── D1推奨媒体をハイライト ─────
+        # ── 貢献CV数バー（count mode のみ） ─────────────────────────────
         if not _is_monetary and valid_df['貢献CV数'].sum() > 0:
-            st.subheader('媒体別 貢献CV数')
-            st.caption('分析期間中に各媒体が起因したCV件数の推定値です。')
+            st.subheader('チャネル別 貢献CV数')
+            st.caption('分析期間中に各チャネルが起因したCV件数の推定値です。')
             cv_sorted = valid_df[valid_df['貢献CV数'] > 0].sort_values('貢献CV数')
-            _highlight_ch = _top_candidate[0] if _top_candidate else None
-            _cv_bar_colors = [
-                '#CB8013' if ch == _highlight_ch else '#317680'
-                for ch in cv_sorted['媒体']
-            ]
             fig_cv = px.bar(
-                cv_sorted, x='貢献CV数', y='媒体', orientation='h',
+                cv_sorted, x='貢献CV数', y='チャネル', orientation='h',
+                color='貢献CV数',
+                color_continuous_scale=[[0, '#A2CEBF'], [0.5, '#5C9291'], [1.0, '#315E6D']],
                 text='貢献CV数',
                 labels={'貢献CV数': '貢献CV数（件）'},
             )
-            fig_cv.update_traces(
-                marker_color=_cv_bar_colors,
-                texttemplate='%{text:.0f}件', textposition='outside', textfont_size=11,
-            )
+            fig_cv.update_traces(texttemplate='%{text:.0f}件', textposition='outside', textfont_size=11)
             fig_cv.update_layout(
+                coloraxis_showscale=False,
                 margin=dict(l=10, r=80, t=10, b=10),
                 height=max(280, len(cv_sorted) * 52),
                 plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
@@ -358,12 +318,12 @@ else:
 
         # ── 限界ROI バー（monetary mode のみ） ──────────────────────────
         if _is_monetary and valid_df['限界ROI'].sum() > 0:
-            st.subheader(f'媒体別 限界{_eff_label}（追加1円あたりの効果）')
+            st.subheader(f'チャネル別 限界{_eff_label}（追加1円あたりの効果）')
             st.caption(f'限界{_eff_label} = 現在の投資水準で追加投資したときの{_eff_label}。平均より低いほど飽和が進んでいます。')
             mroi_sorted = valid_df[valid_df['限界ROI'] > 0].sort_values('限界ROI')
             if not mroi_sorted.empty:
                 fig_mroi = px.bar(
-                    mroi_sorted, x='限界ROI', y='媒体', orientation='h',
+                    mroi_sorted, x='限界ROI', y='チャネル', orientation='h',
                     color='限界ROI',
                     color_continuous_scale=[[0, '#A2CEBF'], [0.5, '#5C9291'], [1.0, '#315E6D']],
                     text='限界ROI',
@@ -379,18 +339,6 @@ else:
                 fig_mroi.update_xaxes(gridcolor='#DAEBE5')
                 fig_mroi.update_yaxes(gridcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig_mroi, use_container_width=True)
-
-    # ── 注意：モデル精度（参考値） ───────────────────────────────────────
-    st.divider()
-    st.caption(
-        f'モデル精度（参考値）： R² {_r2:.3f} {r2_l} ｜ NRMSE（検証）{_nrmse_h:.3f} {nh_l} ｜ MAPE {_mape*100:.1f}% {mp_l}'
-    )
-    with st.expander('モデル精度の詳細'):
-        _mc1, _mc2, _mc3, _mc4 = st.columns(4)
-        _mc1.metric('R²（決定係数）', f'{_r2:.3f}', help='成果の何%をモデルが説明できているか。◎≥0.90 ○≥0.85 △≥0.80 ×それ未満')
-        _mc2.metric('NRMSE 学習', f'{_nrmse_t:.3f}', help='学習データに対する予測誤差（小さいほど良い）。◎<0.10 ○<0.12 △<0.15 ×それ以上')
-        _mc3.metric('NRMSE 検証', f'{_nrmse_h:.3f}', help='未学習データへの予測誤差（汎化性能の指標）。◎<0.15 ○<0.20 △<0.25 ×それ以上')
-        _mc4.metric('MAPE', f'{_mape*100:.1f}%', help='実績値とモデル予測の平均乖離率。◎<8% ○<10% △<12% ×それ以上')
 
     # ── フッター ─────────────────────────────────────────────────────────
     st.divider()

@@ -118,22 +118,8 @@ if _logo_b64:
 else:
     st.title('SmartMMM')
 st.markdown(
-    '<div style="color:#314858;font-size:14px;margin-bottom:10px;">'
-    '大企業だけの分析力を中小・ベンチャー企業の手に。'
-    '</div>',
-    unsafe_allow_html=True,
-)
-st.markdown(
-    '広告データを読み込むと、約30分で媒体別ROIと来月の予算配分の示唆が出ます。'
-    '結果はPPTXレポートで会議に持ち込めます。'
-)
-st.markdown(
-    '<div style="display:flex;gap:28px;flex-wrap:wrap;margin:10px 0 4px;">'
-    '<span style="color:#5C9291;font-size:13px;">1. データ読み込み（約5分）</span>'
-    '<span style="color:#5C9291;font-size:13px;">2. マッピング確認（約5分）</span>'
-    '<span style="color:#5C9291;font-size:13px;">3. 分析と結果確認（約20分）</span>'
-    '</div>',
-    unsafe_allow_html=True,
+    'マーケティングミックスモデリング（MMM）で、各チャネルのROIを可視化し、'
+    '予算配分の最適解を算出します。'
 )
 
 # ── デモボタン ────────────────────────────────────────────────────────────
@@ -141,7 +127,7 @@ with st.container(border=True):
     col_demo_txt, col_demo_btn = st.columns([3, 1])
     with col_demo_txt:
         st.markdown(
-            'サンプルデータ（7媒体 / 3年 / 週次）を使い、'
+            'サンプルデータ（7チャネル / 3年 / 週次）を使い、'
             'アップロードから結果確認まで一連の流れを体験できます。'
         )
     with col_demo_btn:
@@ -181,8 +167,8 @@ client_name = st.text_input(
     label_visibility='collapsed',
 )
 
-# ── ② データ読み込み ──────────────────────────────────────────────────────
-st.subheader('② データ読み込み')
+# ── ② データのアップロード ────────────────────────────────────────────────
+st.subheader('② データのアップロード')
 tab_excel, tab_sheets = st.tabs(['Excelアップロード', 'Google Sheetsから読み込む'])
 
 # ── Tab A: Excel ──────────────────────────────────────────────────────────
@@ -202,7 +188,7 @@ with tab_excel:
 
     if uploaded and client_name:
         _detect_btn_type = 'secondary' if st.session_state.get('detect_result') else 'primary'
-        if st.button('列マッピングを検出する', type=_detect_btn_type):
+        if st.button('列マッピングを自動検出する', type=_detect_btn_type):
             with st.spinner('Excelを解析中...'):
                 suffix = Path(uploaded.name).suffix
                 tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
@@ -269,11 +255,10 @@ if st.session_state.get('detect_result'):
 
     col1, col2 = st.columns(2)
     with col1:
-        _date_col = mapping['date_col'] or '未検出（マッピング確認で選択してください）'
-        _cv_col   = mapping['cv_col'] or '未検出（マッピング確認で選択してください）'
-        st.markdown(f'**DATE列** {_date_col} ｜ **CV列** {_cv_col}')
+        st.metric('DATE列', mapping['date_col'] or '未検出 ⚠')
+        st.metric('目的変数の列', mapping['cv_col'] or '未検出 ⚠')
     with col2:
-        st.metric('検出媒体数',   len(mapping['channel_map']))
+        st.metric('検出チャネル数',   len(mapping['channel_map']))
         st.metric('未マッピング列数', len(mapping.get('unmapped', [])))
 
     if mapping.get('unmapped'):

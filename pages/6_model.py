@@ -57,7 +57,7 @@ else:
 
 channels, _dup_warn = r.dedup_channels(summary.get('channels', {}))
 if _dup_warn:
-    st.warning('同名の可能性がある媒体が複数あります。マッピングを確認して再実行してください（' + '、'.join(_dup_warn) + '）。')
+    st.warning('同名の可能性があるチャネルが複数あります。マッピングを確認して再実行してください（' + '、'.join(_dup_warn) + '）。')
 _ch_valid    = {ch: v for ch, v in channels.items() if not v.get('is_zero', False)}
 _cv_type     = summary.get('cv_metric_type', 'count')
 _is_monetary = _cv_type == 'monetary'
@@ -125,7 +125,7 @@ st.markdown(f"""<div class="kpi-row">
     <div class="kpi-val">{_nrmse_h:.3f}<span class="kpi-badge {_badge_cls(nh_l)}">{nh_l}</span></div>
   </div>
   <div class="kpi-cell">
-    <div class="kpi-lbl"><span class="kpi-lbl-text">配分整合性</span><span class="lq">?<span class="lq-tip">RSSD。モデルが推定するROI比率と、実際の広告費配分比率の乖離度です。<br>◎ 0.10〜0.20 &nbsp;○ ≤0.30 &nbsp;△ ≤0.40 &nbsp;× それ以外<br><br>低すぎる（&lt;0.10）と媒体間の差別化が弱く、高すぎると配分とROIが大きく乖離しています。</span></span></div>
+    <div class="kpi-lbl"><span class="kpi-lbl-text">配分整合性</span><span class="lq">?<span class="lq-tip">RSSD。モデルが推定するROI比率と、実際の広告費配分比率の乖離度です。<br>◎ 0.10〜0.20 &nbsp;○ ≤0.30 &nbsp;△ ≤0.40 &nbsp;× それ以外<br><br>低すぎる（&lt;0.10）とチャネル間の差別化が弱く、高すぎると配分とROIが大きく乖離しています。</span></span></div>
     <div class="kpi-val">{_rssd_str}<span class="kpi-badge {_badge_cls(rs_l)}">{rs_l}</span></div>
   </div>
   <div class="kpi-cell">
@@ -181,7 +181,7 @@ if _rssd is not None:
     if 0.10 <= _rssd <= 0.20:
         st.success(f'RSSD {_rssd:.3f}（適正範囲 0.10〜0.20）。ROI比率と広告費配分が整合しています。')
     elif _rssd < 0.10:
-        st.warning(f'RSSD {_rssd:.3f}（0.10未満）。媒体間のROI差が均質すぎます。配分の差別化が弱い可能性があります。')
+        st.warning(f'RSSD {_rssd:.3f}（0.10未満）。チャネル間のROI差が均質すぎます。配分の差別化が弱い可能性があります。')
     elif _rssd <= 0.30:
         st.warning(f'RSSD {_rssd:.3f}（0.20〜0.30）。ROI比率と広告費配分にやや乖離があります。解釈には注意が必要です。')
     elif _rssd <= 0.40:
@@ -202,7 +202,7 @@ st.divider()
 
 # ── フォレストプロット（ROI/ROAS信頼区間） ────────────────────────────────
 st.subheader(f'{_eff_label} 信頼区間（フォレストプロット）')
-st.caption(f'各媒体の{_eff_label}推定値と95%信頼区間。横棒が短いほど推定の確度が高く、0をまたぐ場合は効果が不明確です。')
+st.caption(f'各チャネルの{_eff_label}推定値と95%信頼区間。横棒が短いほど推定の確度が高く、0をまたぐ場合は効果が不明確です。')
 
 _ci_data = [
     {
