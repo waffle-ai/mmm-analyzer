@@ -5,4 +5,5 @@ __pycache__/
 .env
 *.tmp
 *.log
+!demo_data/run.log
 .streamlit/secrets.toml
