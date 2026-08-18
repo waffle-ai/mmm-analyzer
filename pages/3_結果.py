@@ -152,15 +152,11 @@ else:
     def _nrms_lbl(v):  return '◎' if v < 0.10  else '○' if v < 0.12  else '△' if v < 0.15  else '×'
     def _nrmsh_lbl(v): return '◎' if v < 0.15  else '○' if v < 0.20  else '△' if v < 0.25  else '×'
     def _mape_lbl(v):  return '◎' if v < 0.08  else '○' if v < 0.10  else '△' if v < 0.12  else '×'
-    def _badge_cls(l): return {'◎': 'b-s', '○': 'b-a', '△': 'b-b', '×': 'b-c'}.get(l, 'b-c')
 
-    r2_l = _r2_lbl(_r2);    r2_c  = _badge_cls(r2_l)
-    nt_l = _nrms_lbl(_nrmse_t); nt_c = _badge_cls(nt_l)
-    nh_l = _nrmsh_lbl(_nrmse_h); nh_c = _badge_cls(nh_l)
-    mp_l = _mape_lbl(_mape); mp_c = _badge_cls(mp_l)
-
-    cv_cls  = 'kpi-up'    if _cv_lift   >= 0 else ''
-    cvb_cls = 'kpi-amber' if _cv_lift_b >  0 else ''
+    r2_l = _r2_lbl(_r2)
+    nt_l = _nrms_lbl(_nrmse_t)
+    nh_l = _nrmsh_lbl(_nrmse_h)
+    mp_l = _mape_lbl(_mape)
 
     # ── 判定文 ───────────────────────────────────────────────────────────
     _sat_candidates = {
@@ -215,76 +211,22 @@ else:
     if _action_bullets:
         st.markdown('\n'.join(f'- {b}' for b in _action_bullets))
 
-    # ── KPI ストリップ（ホバーツールチップ付き）──────────────────────────
-    st.markdown("""<style>
-    .kpi-row{display:flex;gap:1px;background:#C5DFD9;border-radius:10px;overflow:visible;margin-bottom:24px;}
-    .kpi-cell{flex:1;background:#F9FDFC;padding:12px 14px;min-width:0;position:relative;cursor:default;}
-    .kpi-row .kpi-cell:first-child{border-radius:10px 0 0 10px;}
-    .kpi-row .kpi-cell:last-child{border-radius:0 10px 10px 0;}
-    .kpi-lbl{font-size:10px;color:#5C9291;text-transform:uppercase;letter-spacing:.08em;
-             white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .kpi-val{font-size:19px;font-weight:700;color:#314858;line-height:1.3;margin-top:3px;
-             display:flex;align-items:center;gap:6px;}
-    .kpi-badge{font-size:10px;padding:2px 6px;border-radius:3px;flex-shrink:0;line-height:1.5;}
-    .b-s{background:#315E6D;color:#fff;}
-    .b-a{background:#7EBEAB;color:#314858;}
-    .b-b{background:#CB8013;color:#fff;}
-    .b-c{background:#999;color:#fff;}
-    .kpi-up{color:#315E6D!important;}
-    .kpi-amber{color:#CB8013!important;}
-    .kpi-tip{
-        visibility:hidden;opacity:0;
-        position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);
-        background:#314858;color:#F3F7F4;font-size:11.5px;padding:10px 14px;
-        border-radius:6px;width:230px;z-index:9999;
-        transition:opacity 0.15s;pointer-events:none;
-        white-space:normal;line-height:1.55;
-        box-shadow:0 4px 12px rgba(0,0,0,.25);
-    }
-    .kpi-cell:hover .kpi-tip{visibility:visible;opacity:1;}
-    .kpi-row .kpi-cell:first-child .kpi-tip{left:0;transform:none;}
-    .kpi-row .kpi-cell:last-child .kpi-tip{left:auto;right:0;transform:none;}
-    </style>""", unsafe_allow_html=True)
+    # ── 効果 ─────────────────────────────────────────────────────────────
+    st.subheader('効果')
+    st.caption(f'CV実績： {_total_cv:,.0f}件（分析期間の合計。広告起因・ベースライン含む）')
+    _col_e1, _col_e2 = st.columns(2)
+    with _col_e1:
+        st.metric('同予算でCVを最適配分した場合', _pct_str(_cv_lift))
+        if _cv_lift >= 0:
+            _cv_after = _total_cv * (1 + _cv_lift / 100)
+            st.caption(f'{_total_cv:,.0f}件 → {_cv_after:,.0f}件')
+    with _col_e2:
+        st.metric(f'総広告費を{int(_budget_inc*100)}%増額した場合', _pct_str(_cv_lift_b))
+        if _cv_lift_b >= 0:
+            _cv_after_b = _total_cv * (1 + _cv_lift_b / 100)
+            st.caption(f'{_total_cv:,.0f}件 → {_cv_after_b:,.0f}件')
 
-    st.markdown(f"""<div class="kpi-row">
-      <div class="kpi-cell">
-        <div class="kpi-lbl">R²（決定係数）</div>
-        <div class="kpi-val">{_r2:.3f}<span class="kpi-badge {r2_c}">{r2_l}</span></div>
-        <div class="kpi-tip">成果の何%をモデルが説明できているかを示します。<br>◎ ≥0.90 &nbsp;○ ≥0.85 &nbsp;△ ≥0.80 &nbsp;× それ未満</div>
-      </div>
-      <div class="kpi-cell">
-        <div class="kpi-lbl">NRMSE 学習</div>
-        <div class="kpi-val">{_nrmse_t:.3f}<span class="kpi-badge {nt_c}">{nt_l}</span></div>
-        <div class="kpi-tip">学習データに対する予測誤差（小さいほど良い）。<br>◎ &lt;0.10 &nbsp;○ &lt;0.12 &nbsp;△ &lt;0.15 &nbsp;× それ以上</div>
-      </div>
-      <div class="kpi-cell">
-        <div class="kpi-lbl">NRMSE 検証</div>
-        <div class="kpi-val">{_nrmse_h:.3f}<span class="kpi-badge {nh_c}">{nh_l}</span></div>
-        <div class="kpi-tip">未学習データへの予測誤差（汎化性能の指標）。<br>◎ &lt;0.15 &nbsp;○ &lt;0.20 &nbsp;△ &lt;0.25 &nbsp;× それ以上</div>
-      </div>
-      <div class="kpi-cell">
-        <div class="kpi-lbl">MAPE</div>
-        <div class="kpi-val">{_mape*100:.1f}%<span class="kpi-badge {mp_c}">{mp_l}</span></div>
-        <div class="kpi-tip">実績値とモデル予測の平均乖離率。<br>◎ &lt;8% &nbsp;○ &lt;10% &nbsp;△ &lt;12% &nbsp;× それ以上</div>
-      </div>
-      <div class="kpi-cell">
-        <div class="kpi-lbl">CV 実績</div>
-        <div class="kpi-val">{_total_cv:,}件</div>
-        <div class="kpi-tip">分析期間の合計コンバージョン数（広告起因・ベースライン含む）。</div>
-      </div>
-      <div class="kpi-cell">
-        <div class="kpi-lbl">同予算 CV改善</div>
-        <div class="kpi-val {cv_cls}">{_pct_str(_cv_lift)}</div>
-        <div class="kpi-tip">同じ総広告費のまま配分をROI比例に最適化した場合の推定CV増加率。</div>
-      </div>
-      <div class="kpi-cell">
-        <div class="kpi-lbl">増額{int(_budget_inc*100)}% CV改善</div>
-        <div class="kpi-val {cvb_cls}">{_pct_str(_cv_lift_b)}</div>
-        <div class="kpi-tip">総広告費を{int(_budget_inc*100)}%増額かつ最適配分した場合の推定CV増加率。</div>
-      </div>
-    </div>""", unsafe_allow_html=True)
-
-    # ── 媒体 DataFrame ──────────────────────────────────────────────
+    # ── 根拠：媒体 DataFrame ──────────────────────────────────────────────
     if channels:
         ch_df = pd.DataFrame([
             {
@@ -303,6 +245,8 @@ else:
         valid_df = ch_df[ch_df['有効']].drop(columns=['有効'])
 
         st.divider()
+        st.subheader('根拠：媒体別データ')
+        st.dataframe(valid_df, use_container_width=True, hide_index=True)
         st.caption(
             '飽和度: 伸び代あり=増額で効果が見込める / 適正域=現状が効率的 / '
             '飽和域=追加投資しても伸びにくい / 係数ゼロ=効果を検出できず'
@@ -410,6 +354,18 @@ else:
                 fig_mroi.update_xaxes(gridcolor='#DAEBE5')
                 fig_mroi.update_yaxes(gridcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig_mroi, use_container_width=True)
+
+    # ── 注意：モデル精度（参考値） ───────────────────────────────────────
+    st.divider()
+    st.caption(
+        f'モデル精度（参考値）： R² {_r2:.3f} {r2_l} ｜ NRMSE（検証）{_nrmse_h:.3f} {nh_l} ｜ MAPE {_mape*100:.1f}% {mp_l}'
+    )
+    with st.expander('モデル精度の詳細'):
+        _mc1, _mc2, _mc3, _mc4 = st.columns(4)
+        _mc1.metric('R²（決定係数）', f'{_r2:.3f}', help='成果の何%をモデルが説明できているか。◎≥0.90 ○≥0.85 △≥0.80 ×それ未満')
+        _mc2.metric('NRMSE 学習', f'{_nrmse_t:.3f}', help='学習データに対する予測誤差（小さいほど良い）。◎<0.10 ○<0.12 △<0.15 ×それ以上')
+        _mc3.metric('NRMSE 検証', f'{_nrmse_h:.3f}', help='未学習データへの予測誤差（汎化性能の指標）。◎<0.15 ○<0.20 △<0.25 ×それ以上')
+        _mc4.metric('MAPE', f'{_mape*100:.1f}%', help='実績値とモデル予測の平均乖離率。◎<8% ○<10% △<12% ×それ以上')
 
     # ── フッター ─────────────────────────────────────────────────────────
     st.divider()
