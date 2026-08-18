@@ -138,7 +138,7 @@ if True:  # 以前のタブを廃止し直接レンダリング
             '<span>元の列名</span><span>チャネル名</span>'
             '<span>役割</span>'
             '<span style="text-align:center;">マッチ度'
-            '<span class="lq" style="margin-left:3px;">?<span class="lq-tip">'
+            '<span class="lq" style="margin-left:3px;">?<span class="lq-tip lq-tip-left">'
             '◯＝スコア80%以上・△＝一致度が低い・—＝未マッチ</span></span></span>'
             '</div>',
             unsafe_allow_html=True,

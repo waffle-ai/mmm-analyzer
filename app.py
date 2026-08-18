@@ -364,6 +364,8 @@ button[data-testid="stTooltipHoverTarget"]:hover svg,
     text-transform:none; letter-spacing:normal;
 }
 .lq:hover .lq-tip { display:block; }
+/* 画面右端付近のアイコン用 — ツールチップを左方向に開く */
+.lq .lq-tip.lq-tip-left { left:auto; right:20px; }
 
 /* ═══════════════════════════════════════════════════
    テーブルヘッダー — dataframe / data_editor 共通
