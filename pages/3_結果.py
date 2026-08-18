@@ -232,9 +232,9 @@ else:
             {
                 '媒体':       ch,
                 'ROI':           round(v.get('roi', 0), 2),
-                'CPA (円)':      int(v.get('cpa', 0) or 0),
                 '貢献CV数':      round(v.get('cv_contrib', 0), 1),
-                '広告費 (万円)':  round(v.get('spend_man', 0), 1),
+                '広告費 (円)':   int(round(v.get('spend_man', 0) * 10000)),
+                'CPA (円)':      int(v.get('cpa', 0) or 0),
                 '飽和度':        v.get('saturation_label', ''),
                 '限界ROI':       round(v.get('marginal_roi', 0), 2),
                 '有効':          not v.get('is_zero', False),
@@ -246,7 +246,18 @@ else:
 
         st.divider()
         st.subheader('根拠：媒体別データ')
-        st.dataframe(valid_df, use_container_width=True, hide_index=True)
+        st.dataframe(
+            valid_df,
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                'ROI':         st.column_config.NumberColumn('ROI', alignment='right'),
+                '貢献CV数':    st.column_config.NumberColumn('貢献CV数', alignment='right'),
+                '広告費 (円)': st.column_config.NumberColumn('広告費 (円)', format='%,d', alignment='right'),
+                'CPA (円)':    st.column_config.NumberColumn('CPA (円)', format='%,d', alignment='right'),
+                '限界ROI':     st.column_config.NumberColumn('限界ROI', alignment='right'),
+            },
+        )
         st.caption(
             '飽和度: 伸び代あり=増額で効果が見込める / 適正域=現状が効率的 / '
             '飽和域=追加投資しても伸びにくい / 係数ゼロ=効果を検出できず'
