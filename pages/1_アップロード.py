@@ -255,8 +255,9 @@ if st.session_state.get('detect_result'):
 
     col1, col2 = st.columns(2)
     with col1:
-        st.metric('DATE列', mapping['date_col'] or '未検出 ⚠')
-        st.metric('目的変数の列', mapping['cv_col'] or '未検出 ⚠')
+        _date_col = mapping['date_col'] or '未検出（マッピング確認で選択してください）'
+        _cv_col   = mapping['cv_col'] or '未検出（マッピング確認で選択してください）'
+        st.markdown(f'**DATE列** {_date_col} ｜ **CV列** {_cv_col}')
     with col2:
         st.metric('検出媒体数',   len(mapping['channel_map']))
         st.metric('未マッピング列数', len(mapping.get('unmapped', [])))
