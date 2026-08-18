@@ -30,7 +30,7 @@ _SAT_COLORS = {
 }
 
 st.title('チャネル詳細')
-st.caption('チャネルごとの飽和曲線（どこで効果が頭打ちになるか）と、広告効果の持続期間（アドストック半減期）が視覚的に分かります。')
+st.markdown('<p class="page-lede">チャネルごとの飽和曲線（どこで効果が頭打ちになるか）と、広告効果の持続期間（アドストック半減期）が視覚的に分かります。</p>', unsafe_allow_html=True)
 
 if not st.session_state.get('job_info'):
     _recovered = r.find_latest_job()
@@ -124,20 +124,22 @@ rows_html = ''
 for _, row in valid_df.iterrows():
     eff_v   = row[_eff_label]
     eff_str = _eff_fmt(eff_v)
+    _cpa_cell = f'<td class="num-col">¥{int(row["CPA (円)"]):,}</td>' if _is_monetary else ''
     rows_html += (
         f'<tr>'
         f'<td><b>{row["チャネル"]}</b></td>'
         f'<td class="num-col">{eff_str}</td>'
-        f'<td class="num-col">¥{int(row["CPA (円)"]):,}</td>'
+        f'{_cpa_cell}'
         f'<td class="num-col">{row["貢献CV数"]:.1f}</td>'
         f'<td class="num-col">{row["広告費 (万円)"]:.1f}万円</td>'
         f'<td class="num-col">{row["限界ROI"]:.2f}倍</td>'
         f'<td>{_sat_badge(row["飽和度"])}</td>'
         f'</tr>'
     )
+_cpa_th = '<th class="num-col">CPA</th>' if _is_monetary else ''
 st.markdown(
     '<table class="sc-table"><thead><tr>'
-    f'<th>チャネル</th><th class="num-col">{_eff_label}</th><th class="num-col">CPA</th>'
+    f'<th>チャネル</th><th class="num-col">{_eff_label}</th>{_cpa_th}'
     '<th class="num-col">貢献CV</th><th class="num-col">広告費</th>'
     f'<th class="num-col">限界{"ROAS/ROI" if _is_monetary else "CPA"}</th>'
     '<th>飽和度<span class="lq" style="vertical-align:middle;margin-left:5px;">?'
