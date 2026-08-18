@@ -61,7 +61,7 @@ _budget_inc = summary.get('budget_increase', 0.3)
 
 channels, _dup_warn = r.dedup_channels(summary.get('channels', {}))
 if _dup_warn:
-    st.warning('同名の可能性があるチャネルが複数あります。マッピングを確認して再実行してください（' + '、'.join(_dup_warn) + '）。')
+    st.warning('同名の可能性がある媒体が複数あります。マッピングを確認して再実行してください（' + '、'.join(_dup_warn) + '）。')
 _ch_valid    = {ch: v for ch, v in channels.items() if not v.get('is_zero', False)}
 _cv_type     = summary.get('cv_metric_type', 'count')
 _is_monetary = _cv_type == 'monetary'
@@ -145,7 +145,7 @@ _sat_html = (
     f'<span style="background:#CB8013;color:#fff;border-radius:999px;padding:2px 8px;'
     f'font-size:11px;font-weight:700;flex-shrink:0;white-space:nowrap;">飽和注意</span>'
     f'<span style="font-size:13px;color:#314858;"><b>{_sat_chs_s[0]}</b> は飽和域に達しています。'
-    f'追加投資の限界効用が低下中。他チャネルへの振り替えを検討してください。</span></div>'
+    f'追加投資の限界効用が低下中。他媒体への振り替えを検討してください。</span></div>'
 ) if _sat_chs_s else ''
 
 st.markdown(f"""
@@ -168,7 +168,7 @@ st.markdown(f"""
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;">
     <div style="background:#fff;border-radius:8px;padding:11px 14px;border:1px solid #DAEBE5;">
       <div style="color:#5C9291;font-size:10px;text-transform:uppercase;
-           letter-spacing:.08em;margin-bottom:3px;">分析チャネル数</div>
+           letter-spacing:.08em;margin-bottom:3px;">分析媒体数</div>
       <div style="font-size:20px;font-weight:700;color:#314858;">
         {n_active_ch}<span style="font-size:12px;font-weight:400;color:#5C9291;"> ch</span>
       </div>
@@ -222,7 +222,7 @@ st.markdown('**詳細分析ページ**')
 c1, c2, c3 = st.columns(3)
 with c1:
     st.page_link('pages/6_model.py',  label='モデル精度 →')
-    st.page_link('pages/5_detail.py', label='チャネル詳細 →')
+    st.page_link('pages/5_detail.py', label='媒体詳細 →')
 with c2:
     st.page_link('pages/3_結果.py',   label='ROI・CPA分析 →')
     st.page_link('pages/4_budget.py', label='予算配分分析 →')

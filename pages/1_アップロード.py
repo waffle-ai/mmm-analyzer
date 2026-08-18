@@ -118,7 +118,7 @@ if _logo_b64:
 else:
     st.title('SmartMMM')
 st.markdown(
-    'マーケティングミックスモデリング（MMM）で、各チャネルのROIを可視化し、'
+    'マーケティングミックスモデリング（MMM）で、各媒体のROIを可視化し、'
     '予算配分の最適解を算出します。'
 )
 
@@ -127,7 +127,7 @@ with st.container(border=True):
     col_demo_txt, col_demo_btn = st.columns([3, 1])
     with col_demo_txt:
         st.markdown(
-            'サンプルデータ（7チャネル / 3年 / 週次）を使い、'
+            'サンプルデータ（7媒体 / 3年 / 週次）を使い、'
             'アップロードから結果確認まで一連の流れを体験できます。'
         )
     with col_demo_btn:
@@ -167,8 +167,8 @@ client_name = st.text_input(
     label_visibility='collapsed',
 )
 
-# ── ② データのアップロード ────────────────────────────────────────────────
-st.subheader('② データのアップロード')
+# ── ② データ読み込み ──────────────────────────────────────────────────────
+st.subheader('② データ読み込み')
 tab_excel, tab_sheets = st.tabs(['Excelアップロード', 'Google Sheetsから読み込む'])
 
 # ── Tab A: Excel ──────────────────────────────────────────────────────────
@@ -188,7 +188,7 @@ with tab_excel:
 
     if uploaded and client_name:
         _detect_btn_type = 'secondary' if st.session_state.get('detect_result') else 'primary'
-        if st.button('列マッピングを自動検出する', type=_detect_btn_type):
+        if st.button('列マッピングを検出する', type=_detect_btn_type):
             with st.spinner('Excelを解析中...'):
                 suffix = Path(uploaded.name).suffix
                 tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
@@ -258,7 +258,7 @@ if st.session_state.get('detect_result'):
         st.metric('DATE列', mapping['date_col'] or '未検出 ⚠')
         st.metric('目的変数の列', mapping['cv_col'] or '未検出 ⚠')
     with col2:
-        st.metric('検出チャネル数',   len(mapping['channel_map']))
+        st.metric('検出媒体数',   len(mapping['channel_map']))
         st.metric('未マッピング列数', len(mapping.get('unmapped', [])))
 
     if mapping.get('unmapped'):

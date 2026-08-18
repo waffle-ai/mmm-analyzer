@@ -32,7 +32,7 @@ st.markdown("""
 <div style="background:#EAF4F0;border-left:4px solid #315E6D;border-radius:0 8px 8px 0;
      padding:12px 16px;margin-bottom:20px;">
   <span style="color:#314858;font-size:15px;">
-    各チャネルの費用対効果（ROI・CPA・限界ROI）を横断比較し、
+    各媒体の費用対効果（ROI・CPA・限界ROI）を横断比較し、
     どこに投資すれば最も効率良くCVを増やせるかが分かります。
   </span>
 </div>""", unsafe_allow_html=True)
@@ -141,7 +141,7 @@ else:
 
     channels, _dup_warn = r.dedup_channels(summary.get('channels', {}))
     if _dup_warn:
-        st.warning('同名の可能性があるチャネルが複数あります。マッピングを確認して再実行してください（' + '、'.join(_dup_warn) + '）。')
+        st.warning('同名の可能性がある媒体が複数あります。マッピングを確認して再実行してください（' + '、'.join(_dup_warn) + '）。')
     _ch_valid    = {ch: v for ch, v in channels.items() if not v.get('is_zero', False)}
     _cv_type     = summary.get('cv_metric_type', 'count')
     _is_monetary = _cv_type == 'monetary'
@@ -189,7 +189,7 @@ else:
         )
     else:
         _verdict_html = (
-            '<strong>全チャネルが飽和域にあります。</strong>'
+            '<strong>全媒体が飽和域にあります。</strong>'
             ' 現状維持か、予算削減の検討が妥当です。'
         )
 
@@ -207,10 +207,10 @@ else:
     _sat_chs_top = [ch for ch, v in channels.items()
                      if not v.get('is_zero', False) and v.get('saturation_label') == '飽和域']
     if _sat_chs_top:
-        _action_bullets.append('飽和域のチャネル: ' + '、'.join(_sat_chs_top) + '。追加投資の効果は低下しています。')
+        _action_bullets.append('飽和域の媒体: ' + '、'.join(_sat_chs_top) + '。追加投資の効果は低下しています。')
     _zero_chs_top = [ch for ch, v in channels.items() if v.get('is_zero', False)]
     if _zero_chs_top:
-        _action_bullets.append('効果を検出できなかったチャネル: ' + '、'.join(_zero_chs_top) + '。マッピングの見直しを推奨します。')
+        _action_bullets.append('効果を検出できなかった媒体: ' + '、'.join(_zero_chs_top) + '。マッピングの見直しを推奨します。')
 
     if _action_bullets:
         st.markdown('\n'.join(f'- {b}' for b in _action_bullets))
@@ -284,11 +284,11 @@ else:
       </div>
     </div>""", unsafe_allow_html=True)
 
-    # ── チャネル DataFrame ──────────────────────────────────────────────
+    # ── 媒体 DataFrame ──────────────────────────────────────────────
     if channels:
         ch_df = pd.DataFrame([
             {
-                'チャネル':       ch,
+                '媒体':       ch,
                 'ROI':           round(v.get('roi', 0), 2),
                 'CPA (円)':      int(v.get('cpa', 0) or 0),
                 '貢献CV数':      round(v.get('cv_contrib', 0), 1),
@@ -314,9 +314,9 @@ else:
             roi_pct_df = valid_df.copy()
             roi_pct_df['ROAS/ROI (%)'] = (roi_pct_df['ROI'] * 100).round(1)
             roi_sorted = roi_pct_df.sort_values('ROAS/ROI (%)')
-            st.subheader(f'チャネル別 {_eff_label}')
+            st.subheader(f'媒体別 {_eff_label}')
             fig_roi = px.bar(
-                roi_sorted, x='ROAS/ROI (%)', y='チャネル', orientation='h',
+                roi_sorted, x='ROAS/ROI (%)', y='媒体', orientation='h',
                 color='ROAS/ROI (%)',
                 color_continuous_scale=[[0, '#A2CEBF'], [0.5, '#5C9291'], [1.0, '#315E6D']],
                 text='ROAS/ROI (%)',
@@ -332,19 +332,19 @@ else:
             fig_roi.update_xaxes(gridcolor='#DAEBE5', gridwidth=1)
             fig_roi.update_yaxes(gridcolor='rgba(0,0,0,0)')
             st.plotly_chart(fig_roi, use_container_width=True)
-            _top_roi_ch = roi_sorted.iloc[-1]['チャネル']
+            _top_roi_ch = roi_sorted.iloc[-1]['媒体']
             st.caption(f'{_eff_label}が最も高いのは【{_top_roi_ch}】です。')
 
         # ── CPA バー ────────────────────────────────────────────────────
         # count mode: 主指標として先頭表示 / monetary mode: 補足として表示
         if not _is_monetary:
-            st.subheader(f'チャネル別 {_eff_label}（主指標）')
+            st.subheader(f'媒体別 {_eff_label}（主指標）')
         else:
-            st.subheader('チャネル別 CPA（補足）')
+            st.subheader('媒体別 CPA（補足）')
         cpa_sorted = valid_df[valid_df['CPA (円)'] > 0].sort_values('CPA (円)', ascending=False)
         if not cpa_sorted.empty:
             fig_cpa = px.bar(
-                cpa_sorted, x='CPA (円)', y='チャネル', orientation='h',
+                cpa_sorted, x='CPA (円)', y='媒体', orientation='h',
                 color='CPA (円)',
                 color_continuous_scale=[[0, '#315E6D'], [0.5, '#5C9291'], [1.0, '#A2CEBF']],
                 text='CPA (円)',
@@ -361,16 +361,16 @@ else:
             fig_cpa.update_yaxes(gridcolor='rgba(0,0,0,0)')
             st.plotly_chart(fig_cpa, use_container_width=True)
             if not _is_monetary:
-                _top_cpa_ch = cpa_sorted.iloc[-1]['チャネル']
+                _top_cpa_ch = cpa_sorted.iloc[-1]['媒体']
                 st.caption(f'CPAが最も低いのは【{_top_cpa_ch}】です。')
 
         # ── 貢献CV数バー（count mode のみ） ─────────────────────────────
         if not _is_monetary and valid_df['貢献CV数'].sum() > 0:
-            st.subheader('チャネル別 貢献CV数')
-            st.caption('分析期間中に各チャネルが起因したCV件数の推定値です。')
+            st.subheader('媒体別 貢献CV数')
+            st.caption('分析期間中に各媒体が起因したCV件数の推定値です。')
             cv_sorted = valid_df[valid_df['貢献CV数'] > 0].sort_values('貢献CV数')
             fig_cv = px.bar(
-                cv_sorted, x='貢献CV数', y='チャネル', orientation='h',
+                cv_sorted, x='貢献CV数', y='媒体', orientation='h',
                 color='貢献CV数',
                 color_continuous_scale=[[0, '#A2CEBF'], [0.5, '#5C9291'], [1.0, '#315E6D']],
                 text='貢献CV数',
@@ -389,12 +389,12 @@ else:
 
         # ── 限界ROI バー（monetary mode のみ） ──────────────────────────
         if _is_monetary and valid_df['限界ROI'].sum() > 0:
-            st.subheader(f'チャネル別 限界{_eff_label}（追加1円あたりの効果）')
+            st.subheader(f'媒体別 限界{_eff_label}（追加1円あたりの効果）')
             st.caption(f'限界{_eff_label} = 現在の投資水準で追加投資したときの{_eff_label}。平均より低いほど飽和が進んでいます。')
             mroi_sorted = valid_df[valid_df['限界ROI'] > 0].sort_values('限界ROI')
             if not mroi_sorted.empty:
                 fig_mroi = px.bar(
-                    mroi_sorted, x='限界ROI', y='チャネル', orientation='h',
+                    mroi_sorted, x='限界ROI', y='媒体', orientation='h',
                     color='限界ROI',
                     color_continuous_scale=[[0, '#A2CEBF'], [0.5, '#5C9291'], [1.0, '#315E6D']],
                     text='限界ROI',

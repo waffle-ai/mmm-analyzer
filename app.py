@@ -39,8 +39,8 @@ _icon_analysis = _b64img('icon-analysis.png')
 
 # ── ナビゲーション定義（認証状態に関わらず毎回登録する。switch_page から参照するため）──
 pg = st.navigation({
-    'データのアップロード': [
-        st.Page('pages/1_アップロード.py', title='データのアップロード', default=True, url_path='upload'),
+    'データ読み込み': [
+        st.Page('pages/1_アップロード.py', title='データ読み込み', default=True, url_path='upload'),
     ],
     'データのマッピング': [
         st.Page('pages/2_マッピング確認.py', title='マッピング設定',   url_path='mapping'),
@@ -49,7 +49,7 @@ pg = st.navigation({
     '分析結果': [
         st.Page('pages/summary.py',          title='分析サマリ',        url_path='summary'),
         st.Page('pages/6_model.py',          title='モデル精度',        url_path='accuracy'),
-        st.Page('pages/5_detail.py',         title='チャネル分析',      url_path='channel'),
+        st.Page('pages/5_detail.py',         title='媒体分析',      url_path='channel'),
         st.Page('pages/3_結果.py',           title='ROI・CPA分析',     url_path='roi-cpa'),
         st.Page('pages/4_budget.py',         title='予算配分分析',      url_path='allocation'),
         st.Page('pages/7_frontier.py',       title='投資上限分析',      url_path='investment-cap'),

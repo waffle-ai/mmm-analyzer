@@ -34,7 +34,7 @@ st.markdown("""
 <div style="background:#EAF4F0;border-left:4px solid #315E6D;border-radius:0 8px 8px 0;
      padding:12px 16px;margin-bottom:20px;">
   <span style="color:#314858;font-size:15px;">
-    各チャネルの広告費が「効果の出るゾーン」にあるか「飽和域（費用対効果が低下するゾーン）」
+    各媒体の広告費が「効果の出るゾーン」にあるか「飽和域（費用対効果が低下するゾーン）」
     にあるかを可視化します。これ以上増額しても効果が薄くなる「投資上限」の目安が分かります。
   </span>
 </div>""", unsafe_allow_html=True)
@@ -66,7 +66,7 @@ else:
 
 channels, _dup_warn = r.dedup_channels(summary.get('channels', {}))
 if _dup_warn:
-    st.warning('同名の可能性があるチャネルが複数あります。マッピングを確認して再実行してください（' + '、'.join(_dup_warn) + '）。')
+    st.warning('同名の可能性がある媒体が複数あります。マッピングを確認して再実行してください（' + '、'.join(_dup_warn) + '）。')
 _ch_valid    = {ch: v for ch, v in channels.items() if not v.get('is_zero', False)}
 _cv_type     = summary.get('cv_metric_type', 'count')
 _is_monetary = _cv_type == 'monetary'
@@ -77,7 +77,7 @@ _thr_cpa    = summary.get('threshold_cpa', 0)
 _total_cv   = summary.get('total_cv', 0)
 
 if not _ch_valid:
-    st.warning('有効なチャネルが見つかりません。')
+    st.warning('有効な媒体が見つかりません。')
     st.stop()
 
 # ── 投資効率上限サマリー ──────────────────────────────────────────────────
@@ -88,7 +88,7 @@ if _max_eff > 0:
         st.markdown(f"""
         <div style="background:#F3F7F4;border-radius:10px;padding:18px 22px;border:1px solid #DAEBE5;">
           <div style="color:#5C9291;font-size:11px;text-transform:uppercase;letter-spacing:.08em;
-               margin-bottom:6px;">効率的な投資上限（全チャネル合計）</div>
+               margin-bottom:6px;">効率的な投資上限（全媒体合計）</div>
           <div style="font-size:32px;font-weight:800;color:#314858;">
             {_max_man:,.0f}<span style="font-size:16px;font-weight:400;color:#5C9291;"> 万円</span>
           </div>
@@ -164,8 +164,8 @@ if _frontier_curve:
     st.plotly_chart(fig_fc, use_container_width=True)
     st.divider()
 
-# ── チャネル別 飽和度ゲージ ───────────────────────────────────────────────
-st.subheader('チャネル別 飽和度（現在の投資水準）')
+# ── 媒体別 飽和度ゲージ ───────────────────────────────────────────────
+st.subheader('媒体別 飽和度（現在の投資水準）')
 st.caption('飽和スコアが高いほど追加投資の効果が薄れています。100%で完全飽和。')
 
 sat_rows = []
@@ -176,7 +176,7 @@ for ch, v in _ch_valid.items():
     mroi      = v.get('marginal_roi', 0)
     spend     = v.get('spend_man', 0)
     sat_rows.append({
-        'チャネル':    ch,
+        '媒体':    ch,
         '飽和スコア':  round(sat_score, 1),
         '飽和度':      sat_label,
         'ROI':         round(roi, 2),
@@ -194,25 +194,25 @@ for idx, (_, row) in enumerate(sat_df.iterrows()):
     color = color_cycle[idx]
     # 背景バー（100%）
     fig_sat.add_trace(go.Bar(
-        x=[100], y=[row['チャネル']], orientation='h',
+        x=[100], y=[row['媒体']], orientation='h',
         marker_color='#E8F2EF', showlegend=False,
         hoverinfo='skip',
     ))
     # 飽和度バー
     fig_sat.add_trace(go.Bar(
-        x=[row['飽和スコア']], y=[row['チャネル']], orientation='h',
+        x=[row['飽和スコア']], y=[row['媒体']], orientation='h',
         marker_color=color, showlegend=False,
         text=f"{row['飽和スコア']:.0f}%  ({row['飽和度']})",
         textposition='outside', textfont_size=12,
         hovertemplate=(
-            f"<b>{row['チャネル']}</b><br>"
+            f"<b>{row['媒体']}</b><br>"
             f"飽和スコア: {row['飽和スコア']:.1f}%<br>"
             f"状態: {row['飽和度']}<br>"
             + (
                 f"ROAS/ROI: {row['ROI'] * 100:.1f}%<br>"
                 f"限界ROAS/ROI: {row['限界ROI'] * 100:.1f}%"
                 if _is_monetary else
-                f"CPA: ¥{int(_ch_valid.get(row['チャネル'], {}).get('cpa', 0)):,}<br>"
+                f"CPA: ¥{int(_ch_valid.get(row['媒体'], {}).get('cpa', 0)):,}<br>"
                 f"限界ROI: {row['限界ROI']:.2f}"
             )
             + "<extra></extra>"
@@ -241,12 +241,12 @@ if _is_monetary and sat_df['限界ROI'].sum() > 0:
     _avg_lbl = f'平均{_eff_label}'
     _mrg_lbl = f'限界{_eff_label}'
     cmp_df = pd.DataFrame({
-        'チャネル':  sat_df['チャネル'].tolist() * 2,
+        '媒体':  sat_df['媒体'].tolist() * 2,
         'ROI値':     sat_df['ROI'].tolist() + sat_df['限界ROI'].tolist(),
         '種別':      [_avg_lbl] * len(sat_df) + [_mrg_lbl] * len(sat_df),
     })
     fig_cmp = px.bar(
-        cmp_df, x='ROI値', y='チャネル', color='種別', orientation='h',
+        cmp_df, x='ROI値', y='媒体', color='種別', orientation='h',
         barmode='group',
         color_discrete_map={_avg_lbl: _COL_LIGHT, _mrg_lbl: _COL_PRIMARY},
         text='ROI値',
@@ -266,7 +266,7 @@ if _is_monetary and sat_df['限界ROI'].sum() > 0:
 # ── 飽和曲線（Hill関数）───────────────────────────────────────────────────
 st.divider()
 st.subheader('飽和曲線（投資効率フロンティア）')
-st.caption('各チャネルの現在の投資水準（●）と、それ以上増額した場合の効果の伸び方を示します。')
+st.caption('各媒体の現在の投資水準（●）と、それ以上増額した場合の効果の伸び方を示します。')
 
 _has_curves = any(
     v.get('gamma', 0) > 0 and v.get('saturation_score', 0) > 0
@@ -340,6 +340,6 @@ if _has_curves:
         margin=dict(l=10, r=10, t=40, b=10),
     )
     st.plotly_chart(fig_rc, use_container_width=True)
-    st.caption('点線（80%）は飽和域の目安。●が点線を超えたチャネルは追加投資効果が低下しています。')
+    st.caption('点線（80%）は飽和域の目安。●が点線を超えた媒体は追加投資効果が低下しています。')
 else:
     st.info('飽和曲線の生成に必要なパラメータが含まれていません。実際の分析データで確認できます。')

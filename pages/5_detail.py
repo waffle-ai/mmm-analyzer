@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Page 5 — チャネル詳細（スコアカード・レスポンスカーブ・アドストック減衰）。"""
+"""Page 5 — 媒体詳細（スコアカード・レスポンスカーブ・アドストック減衰）。"""
 import sys
 from pathlib import Path
 
@@ -29,12 +29,12 @@ _SAT_COLORS = {
     '係数ゼロ':   '#C5DFD9',
 }
 
-st.title('チャネル詳細')
+st.title('媒体詳細')
 st.markdown("""
 <div style="background:#EAF4F0;border-left:4px solid #315E6D;border-radius:0 8px 8px 0;
      padding:12px 16px;margin-bottom:20px;">
   <span style="color:#314858;font-size:15px;">
-    チャネルごとの飽和曲線（どこで効果が頭打ちになるか）と、
+    媒体ごとの飽和曲線（どこで効果が頭打ちになるか）と、
     広告効果の持続期間（アドストック半減期）が視覚的に分かります。
   </span>
 </div>""", unsafe_allow_html=True)
@@ -68,7 +68,7 @@ else:
 
 channels, _dup_warn = r.dedup_channels(summary.get('channels', {}))
 if _dup_warn:
-    st.warning('同名の可能性があるチャネルが複数あります。マッピングを確認して再実行してください（' + '、'.join(_dup_warn) + '）。')
+    st.warning('同名の可能性がある媒体が複数あります。マッピングを確認して再実行してください（' + '、'.join(_dup_warn) + '）。')
 _ch_valid    = {ch: v for ch, v in channels.items() if not v.get('is_zero', False)}
 _cv_type     = summary.get('cv_metric_type', 'count')
 _is_monetary = _cv_type == 'monetary'
@@ -88,15 +88,15 @@ def _eff_fmt(v):
     return f'¥{int(v):,}'
 
 if not _ch_valid:
-    st.warning('有効なチャネルが見つかりません。')
+    st.warning('有効な媒体が見つかりません。')
     st.stop()
 
-# ── チャネルスコアカード ────────────────────────────────────────────────
-st.subheader('チャネル別スコアカード')
+# ── 媒体スコアカード ────────────────────────────────────────────────
+st.subheader('媒体別スコアカード')
 
 valid_df = pd.DataFrame([
     {
-        'チャネル':      ch,
+        '媒体':      ch,
         _eff_label:     _eff_val(v),
         'CPA (円)':     int(v.get('cpa', 0) or 0),
         '貢献CV数':     round(v.get('cv_contrib', 0), 1),
@@ -133,7 +133,7 @@ for _, row in valid_df.iterrows():
     eff_str = _eff_fmt(eff_v)
     rows_html += (
         f'<tr>'
-        f'<td><b>{row["チャネル"]}</b></td>'
+        f'<td><b>{row["媒体"]}</b></td>'
         f'<td class="num-col">{eff_str}</td>'
         f'<td class="num-col">¥{int(row["CPA (円)"]):,}</td>'
         f'<td class="num-col">{row["貢献CV数"]:.1f}</td>'
@@ -144,7 +144,7 @@ for _, row in valid_df.iterrows():
     )
 st.markdown(
     '<table class="sc-table"><thead><tr>'
-    f'<th>チャネル</th><th class="num-col">{_eff_label}</th><th class="num-col">CPA</th>'
+    f'<th>媒体</th><th class="num-col">{_eff_label}</th><th class="num-col">CPA</th>'
     '<th class="num-col">貢献CV</th><th class="num-col">広告費</th>'
     f'<th class="num-col">限界{"ROAS/ROI" if _is_monetary else "CPA"}</th>'
     '<th>飽和度<span class="lq" style="vertical-align:middle;margin-left:5px;">?'
@@ -155,13 +155,13 @@ st.markdown(
 
 zero_chs = [ch for ch, v in channels.items() if v.get('is_zero')]
 if zero_chs:
-    st.warning(f'効果ゼロと判定されたチャネル: {", ".join(zero_chs)}')
+    st.warning(f'効果ゼロと判定された媒体: {", ".join(zero_chs)}')
 
 st.divider()
 
 # ── レスポンスカーブ ──────────────────────────────────────────────────────
 st.subheader('レスポンスカーブ（飽和曲線）')
-st.caption('各チャネルの広告費と広告効果の関係。●は現在の投資水準です。曲線が寝るほど追加投資の効果が薄れています。')
+st.caption('各媒体の広告費と広告効果の関係。●は現在の投資水準です。曲線が寝るほど追加投資の効果が薄れています。')
 
 _has_curves = valid_df[['alpha', 'gamma', 'sat_score']].apply(
     lambda r: r['gamma'] > 0 and r['sat_score'] > 0, axis=1
@@ -172,7 +172,7 @@ if _has_curves:
     n_col = 2
     n_row = (n_ch + 1) // n_col
 
-    subplot_titles = [row['チャネル'] for _, row in valid_df.iterrows()]
+    subplot_titles = [row['媒体'] for _, row in valid_df.iterrows()]
     fig_rc = make_subplots(
         rows=n_row, cols=n_col,
         subplot_titles=subplot_titles,
@@ -261,7 +261,7 @@ if _has_lambda:
         fig_decay.add_trace(go.Scatter(
             x=weeks, y=decay,
             mode='lines+markers',
-            name=f'{row["チャネル"]} (λ={lam:.2f})',
+            name=f'{row["媒体"]} (λ={lam:.2f})',
             line=dict(color=color, width=2),
             marker=dict(size=5),
         ))
@@ -287,7 +287,7 @@ if _has_lambda:
         lam = row['lambda']
         if lam > 0 and lam < 1:
             hl = round(-np.log(2) / np.log(lam), 1)
-            hl_data.append({'チャネル': row['チャネル'], 'λ（減衰率）': f'{lam:.3f}', '効果の半減期（週）': f'{hl:.1f}週'})
+            hl_data.append({'媒体': row['媒体'], 'λ（減衰率）': f'{lam:.3f}', '効果の半減期（週）': f'{hl:.1f}週'})
     if hl_data:
         st.markdown(
             '<div class="lbl-q" style="font-size:13px;font-weight:400;color:#5C9291;margin-bottom:6px;">'
