@@ -9,6 +9,7 @@ sys.path.insert(0, str(_HERE.parent))
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+import numpy as np
 
 import runner as r
 
@@ -19,7 +20,7 @@ _COL_LIGHT   = '#A2CEBF'
 _COL_AMBER   = '#CB8013'
 
 st.title('モデル精度')
-st.caption('MMMモデルが実績値をどれだけ正確に再現しているか確認できます。精度グレードと各指標から、分析結果の信頼性を判断してください。')
+st.markdown('<p class="page-lede">MMMモデルが実績値をどれだけ正確に再現しているか確認できます。精度グレードと各指標から、分析結果の信頼性を判断してください。</p>', unsafe_allow_html=True)
 
 if not st.session_state.get('job_info'):
     _recovered = r.find_latest_job()
@@ -293,3 +294,63 @@ else:
     )
     st.plotly_chart(fig_fp, use_container_width=True)
     st.caption(f'◆ = {_eff_label}点推定値。このモデルでは信頼区間（CI）は未対応です。')
+
+# ── 実測と予測の比較 ────────────────────────────────────────────────────────
+_avp = summary.get('actual_vs_pred', {})
+if _avp.get('dates_train'):
+    st.divider()
+    st.subheader('実測と予測の比較')
+
+    _dt_train = pd.to_datetime(_avp['dates_train'])
+    _at_train = _avp['actual_train']
+    _pd_train = _avp['pred_train']
+    _dt_hold  = pd.to_datetime(_avp.get('dates_hold', []))
+    _at_hold  = _avp.get('actual_hold', [])
+    _pd_hold  = _avp.get('pred_hold', [])
+    _cv_col   = 'CV（金額）' if _is_monetary else 'CV'
+
+    fig_avp = go.Figure()
+    fig_avp.add_trace(go.Scatter(x=_dt_train, y=_at_train, mode='lines', name='実測',
+                                  line=dict(color=_COL_PRIMARY, width=2)))
+    fig_avp.add_trace(go.Scatter(x=_dt_train, y=_pd_train, mode='lines', name='予測',
+                                  line=dict(color=_COL_AMBER, width=1.6, dash='dash')))
+    if len(_dt_hold):
+        fig_avp.add_trace(go.Scatter(x=_dt_hold, y=_at_hold, mode='lines', name='実測（検証期間）',
+                                      line=dict(color=_COL_GREEN, width=2)))
+        fig_avp.add_trace(go.Scatter(x=_dt_hold, y=_pd_hold, mode='lines', name='予測（検証期間）',
+                                      line=dict(color=_COL_AMBER, width=1.6, dash='dot')))
+        fig_avp.add_vline(x=_dt_hold[0], line_dash='dash', line_color='#999',
+                           annotation_text='検証期間', annotation_position='top right')
+    fig_avp.update_layout(
+        yaxis_title=_cv_col,
+        xaxis=dict(gridcolor='#DAEBE5'),
+        yaxis=dict(gridcolor='#DAEBE5'),
+        height=340,
+        legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1),
+        plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=20, r=20, t=20, b=10),
+    )
+    st.plotly_chart(fig_avp, use_container_width=True)
+
+    _dt_all = list(_dt_train) + list(_dt_hold)
+    _residuals = np.array(list(_at_train) + list(_at_hold)) - np.array(list(_pd_train) + list(_pd_hold))
+    _res_colors = [_COL_PRIMARY if v >= 0 else _COL_AMBER for v in _residuals]
+
+    fig_res = go.Figure(go.Bar(x=_dt_all, y=_residuals, marker_color=_res_colors))
+    fig_res.add_hline(y=0, line_color='#999', line_width=1)
+    fig_res.update_layout(
+        yaxis_title='残差',
+        xaxis=dict(gridcolor='#DAEBE5'),
+        yaxis=dict(gridcolor='#DAEBE5'),
+        height=180,
+        showlegend=False,
+        plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=20, r=20, t=10, b=20),
+    )
+    st.plotly_chart(fig_res, use_container_width=True)
+
+    _holdout_n = len(_dt_hold)
+    st.caption(
+        f'モデルが実際の{_cv_col}をどれだけ正確に予測できているかを示します'
+        + (f'（右端{_holdout_n}期間は、未学習データによる検証期間）。' if _holdout_n else '。')
+    )

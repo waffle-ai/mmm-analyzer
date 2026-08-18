@@ -6,15 +6,20 @@ from pathlib import Path
 _HERE = Path(__file__).parent
 sys.path.insert(0, str(_HERE.parent))
 
+import datetime as _dt
+
+import pandas as pd
+import plotly.express as px
 import streamlit as st
 import runner as r
 
 _COL_PRIMARY = '#315E6D'
 _COL_GREEN   = '#7EBEAB'
 _COL_AMBER   = '#CB8013'
+_COL_LIGHT   = '#A2CEBF'
 
 st.title('分析サマリ')
-st.caption('モデルの精度グレード・主要KPI・推奨アクションを一覧できます。各詳細ページへのリンクからさらに深掘りできます。')
+st.markdown('<p class="page-lede">モデルの精度グレード・主要KPI・推奨アクションを一覧できます。各詳細ページへのリンクからさらに深掘りできます。</p>', unsafe_allow_html=True)
 
 if not st.session_state.get('job_info'):
     _recovered = r.find_latest_job()
@@ -60,6 +65,51 @@ _cv_type     = summary.get('cv_metric_type', 'count')
 _is_monetary = _cv_type == 'monetary'
 _eff_label   = 'ROAS / ROI' if _is_monetary else 'CPA'
 _eff_unit    = '%' if _is_monetary else '円'
+_total_spend = summary.get('total_spend', 0)
+
+# ── 分析期間（実測/予測の時系列データから算出） ──────────────────────────
+_avp = summary.get('actual_vs_pred', {})
+_avp_dates = (_avp.get('dates_train') or []) + (_avp.get('dates_hold') or [])
+if _avp_dates:
+    _d0 = _dt.date.fromisoformat(_avp_dates[0])
+    _d1 = _dt.date.fromisoformat(_avp_dates[-1])
+    _period_str = f'{_d0.year}年{_d0.month}月〜{_d1.year}年{_d1.month}月'
+else:
+    _period_str = None
+
+# ── チャネル別 現状/最適配分・推奨アクション ──────────────────────────────
+_channel_opt = summary.get('channel_opt', {})
+
+def _derive_action(ch, opt):
+    cur = channels.get(ch, {}).get('spend_man', 0) * 10000
+    if 'action' in opt:
+        return opt['action'], opt.get('delta_spend', opt.get('optimal_spend', 0) - cur), cur
+    delta = opt.get('optimal_spend', 0) - cur
+    is_zero = channels.get(ch, {}).get('is_zero', False)
+    if is_zero:
+        act = '停止・効果検証'
+    elif cur <= 0:
+        act = '新規投資検討'
+    else:
+        ratio = delta / cur
+        act = '増額推奨' if ratio >= 0.20 else '削減推奨' if ratio <= -0.20 else '現状維持'
+    return act, delta, cur
+
+_ch_actions = {}
+for _ch, _opt in _channel_opt.items():
+    _act, _delta, _cur = _derive_action(_ch, _opt)
+    _ch_actions[_ch] = {
+        'action': _act, 'delta': _delta, 'current_spend': _cur,
+        'optimal_spend': _opt.get('optimal_spend', 0),
+    }
+
+_inc_chs  = sorted([c for c, v in _ch_actions.items() if v['action'] == '増額推奨'],
+                    key=lambda c: -_ch_actions[c]['delta'])
+_dec_chs  = sorted([c for c, v in _ch_actions.items() if v['action'] == '削減推奨'],
+                    key=lambda c: _ch_actions[c]['delta'])
+_stop_chs = [c for c, v in _ch_actions.items() if v['action'] in ('停止・効果検証', '新規投資検討')]
+
+_abs_cv_gain = round(_total_cv * (_cv_lift / 100), 0) if _total_cv else 0
 
 def _r2_lbl(v):    return '◎' if v >= 0.90 else '○' if v >= 0.85 else '△' if v >= 0.80 else '×'
 def _nrms_lbl(v):  return '◎' if v < 0.10  else '○' if v < 0.12  else '△' if v < 0.15  else '×'
@@ -141,9 +191,27 @@ _sat_html = (
     f'追加投資の限界効用が低下中。他チャネルへの振り替えを検討してください。</span></div>'
 ) if _sat_chs_s else ''
 
+def _ch_chip_row(badge_bg, badge_fg, badge_label, chs, empty_note=''):
+    if not chs:
+        if not empty_note:
+            return ''
+        chs_text = empty_note
+    else:
+        chs_text = '　／　'.join(f'<b>{c}</b>' for c in chs)
+    return (
+        f'<div style="display:flex;align-items:flex-start;gap:10px;">'
+        f'<span style="background:{badge_bg};color:{badge_fg};border-radius:999px;padding:2px 8px;'
+        f'font-size:11px;font-weight:700;flex-shrink:0;white-space:nowrap;">{badge_label}</span>'
+        f'<span style="font-size:13px;color:#314858;">{chs_text}</span></div>'
+    )
+
+_inc_row = _ch_chip_row('#315E6D', '#fff', f'増額推奨（{len(_inc_chs)}件）', _inc_chs)
+_dec_row = _ch_chip_row('#5C9291', '#fff', f'削減推奨（{len(_dec_chs)}件）', _dec_chs)
+_stop_row = _ch_chip_row('#CB8013', '#fff', f'停止・要検討（{len(_stop_chs)}件）', _stop_chs)
+
 st.markdown(f"""
 <div style="background:#F3F7F4;border-radius:12px;padding:20px 24px 18px;
-            margin-bottom:20px;border:1px solid #DAEBE5;">
+            margin-bottom:20px;box-shadow:0 1px 4px rgba(49,72,88,.10);">
   <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
     <div style="background:{_grade_color};color:#fff;border-radius:10px;
          min-width:60px;height:60px;display:flex;align-items:center;justify-content:center;
@@ -158,29 +226,44 @@ st.markdown(f"""
       </div>
     </div>
   </div>
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;">
-    <div style="background:#fff;border-radius:8px;padding:11px 14px;border:1px solid #DAEBE5;">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:18px;">
+    {f'''<div style="background:#fff;border-radius:8px;padding:11px 14px;box-shadow:0 1px 3px rgba(49,72,88,.08);">
+      <div style="color:#5C9291;font-size:10px;text-transform:uppercase;
+           letter-spacing:.08em;margin-bottom:3px;">分析期間</div>
+      <div style="font-size:16px;font-weight:700;color:#314858;line-height:1.4;">{_period_str}</div>
+    </div>''' if _period_str else ''}
+    <div style="background:#fff;border-radius:8px;padding:11px 14px;box-shadow:0 1px 3px rgba(49,72,88,.08);">
       <div style="color:#5C9291;font-size:10px;text-transform:uppercase;
            letter-spacing:.08em;margin-bottom:3px;">分析チャネル数</div>
       <div style="font-size:20px;font-weight:700;color:#314858;">
         {n_active_ch}<span style="font-size:12px;font-weight:400;color:#5C9291;"> ch</span>
       </div>
     </div>
-    <div style="background:#fff;border-radius:8px;padding:11px 14px;border:1px solid #DAEBE5;">
+    <div style="background:#fff;border-radius:8px;padding:11px 14px;box-shadow:0 1px 3px rgba(49,72,88,.08);">
       <div style="color:#5C9291;font-size:10px;text-transform:uppercase;
            letter-spacing:.08em;margin-bottom:3px;">CV 実績</div>
       <div style="font-size:20px;font-weight:700;color:#314858;">
         {_total_cv:,}<span style="font-size:12px;font-weight:400;color:#5C9291;"> 件</span>
       </div>
     </div>
-    <div style="background:#fff;border-radius:8px;padding:11px 14px;border:1px solid #DAEBE5;">
+    <div style="background:#fff;border-radius:8px;padding:11px 14px;box-shadow:0 1px 3px rgba(49,72,88,.08);">
       <div style="color:#5C9291;font-size:10px;text-transform:uppercase;
-           letter-spacing:.08em;margin-bottom:3px;">同予算 CV改善</div>
+           letter-spacing:.08em;margin-bottom:3px;">分析期間の広告費合計</div>
+      <div style="font-size:20px;font-weight:700;color:#314858;">
+        {_total_spend/10000:,.0f}<span style="font-size:12px;font-weight:400;color:#5C9291;"> 万円</span>
+      </div>
+    </div>
+    <div style="background:#fff;border-radius:8px;padding:11px 14px;box-shadow:0 1px 3px rgba(49,72,88,.08);">
+      <div style="color:#5C9291;font-size:10px;text-transform:uppercase;
+           letter-spacing:.08em;margin-bottom:3px;">同予算 CV改善余地</div>
       <div style="font-size:20px;font-weight:700;color:{_cv_lift_color};">
         {_pct_str(_cv_lift)}
       </div>
+      <div style="font-size:11px;color:#5C9291;margin-top:2px;">
+        {f'+{_abs_cv_gain:,.0f}件増加の試算' if _abs_cv_gain > 0 else ''}
+      </div>
     </div>
-    <div style="background:#fff;border-radius:8px;padding:11px 14px;border:1px solid #DAEBE5;">
+    <div style="background:#fff;border-radius:8px;padding:11px 14px;box-shadow:0 1px 3px rgba(49,72,88,.08);">
       <div style="color:#5C9291;font-size:10px;text-transform:uppercase;
            letter-spacing:.08em;margin-bottom:3px;">平均{_eff_label}</div>
       <div style="font-size:20px;font-weight:700;color:#314858;">
@@ -204,10 +287,39 @@ st.markdown(f"""
         <span style="font-size:13px;color:#314858;">
           {_realloc_text}
         </span>
-      </div>{_sat_html}
+      </div>{_sat_html}{_inc_row}{_dec_row}{_stop_row}
     </div>
   </div>
 </div>""", unsafe_allow_html=True)
+
+# ── チャネル別 現状 vs 最適配分 ────────────────────────────────────────────
+if _ch_actions:
+    st.subheader('予算配分：現状 vs 最適')
+    st.caption('チャネルごとの現状の広告費と、モデルが試算した最適配分（万円）を比較します。')
+    _bar_chs = sorted(_ch_actions.keys(),
+                       key=lambda c: _ch_actions[c]['current_spend'], reverse=True)
+    _bar_df = pd.DataFrame({
+        'チャネル': _bar_chs * 2,
+        '広告費 (万円)': (
+            [round(_ch_actions[c]['current_spend'] / 10000, 1) for c in _bar_chs]
+            + [round(_ch_actions[c]['optimal_spend'] / 10000, 1) for c in _bar_chs]
+        ),
+        '配分': ['現状'] * len(_bar_chs) + ['最適配分'] * len(_bar_chs),
+    })
+    fig_smry = px.bar(
+        _bar_df, x='チャネル', y='広告費 (万円)', color='配分',
+        barmode='group',
+        color_discrete_map={'現状': _COL_LIGHT, '最適配分': _COL_PRIMARY},
+        labels={'広告費 (万円)': '広告費（万円）'},
+    )
+    fig_smry.update_layout(
+        margin=dict(l=10, r=20, t=10, b=10), height=320,
+        legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1),
+        plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+    )
+    fig_smry.update_yaxes(gridcolor='#DAEBE5')
+    st.plotly_chart(fig_smry, use_container_width=True)
+    st.caption('※ 最適配分はレスポンスカーブに基づく試算値です。詳細は「予算配分分析」ページを参照してください。')
 
 # ── 詳細分析へのナビゲーション ────────────────────────────────────────────
 st.divider()
