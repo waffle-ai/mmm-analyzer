@@ -20,7 +20,7 @@ _COL_AMBER   = '#CB8013'
 _MTERIA      = ['#315E6D', '#7EBEAB', '#5C9291', '#317680', '#A2CEBF', '#CB8013', '#C5DFD9']
 
 st.title('予算増額・減額分析')
-st.caption('総広告費を±30%の範囲で増減したときの成果変化を試算します。各シナリオの費用対効果を見比べ、予算規模の判断に使えます。')
+st.markdown('<p class="page-lede">総広告費を±30%の範囲で増減したときの成果変化を試算します。各シナリオの費用対効果を見比べ、予算規模の判断に使えます。</p>', unsafe_allow_html=True)
 
 if not st.session_state.get('job_info'):
     _recovered = r.find_latest_job()
@@ -164,24 +164,20 @@ def _interp_hex(c0, c1, t):
     b = int(int(c0[5:7],16) + (int(c1[5:7],16)-int(c0[5:7],16))*t)
     return f'#{r:02x}{g:02x}{b:02x}'
 
-_neg_rows = [row for _, row in df.iterrows() if row['scenario'] < -0.001]
-_pos_rows = [row for _, row in df.iterrows() if row['scenario'] > 0.001 and '最適配分' not in str(row['label'])]
+_grad_rows = [row for _, row in df.iterrows()
+              if abs(row['scenario']) > 0.001 and '最適配分' not in str(row['label'])]
 
 bar_colors = []
-_ni, _pi = 0, 0
+_gi = 0
 for _, row in df.iterrows():
     if '最適配分' in str(row['label']):
         bar_colors.append(_COL_GREEN)
     elif abs(row['scenario']) < 0.001:
         bar_colors.append(_COL_MID)
-    elif row['scenario'] < 0:
-        t = _ni / max(len(_neg_rows)-1, 1)
-        bar_colors.append(_interp_hex('#FBECD7', _COL_AMBER, t))
-        _ni += 1
     else:
-        t = _pi / max(len(_pos_rows)-1, 1)
+        t = _gi / max(len(_grad_rows)-1, 1)
         bar_colors.append(_interp_hex(_COL_LIGHT, _COL_PRIMARY, t))
-        _pi += 1
+        _gi += 1
 
 fig_cv = go.Figure()
 fig_cv.add_trace(go.Bar(
@@ -219,7 +215,7 @@ st.plotly_chart(fig_cv, use_container_width=True)
 # 凡例説明
 st.markdown(
     '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;">'
-    f'<span style="font-size:12px;color:#5C9291;">■ <span style="color:{_COL_AMBER}">■</span> 減額シナリオ</span>'
+    f'<span style="font-size:12px;color:#5C9291;">■ <span style="color:{_COL_LIGHT}">■</span> 減額シナリオ</span>'
     f'<span style="font-size:12px;color:#5C9291;">■ <span style="color:{_COL_MID}">■</span> 現状</span>'
     f'<span style="font-size:12px;color:#5C9291;">■ <span style="color:{_COL_GREEN}">■</span> 現状（最適配分）</span>'
     f'<span style="font-size:12px;color:#5C9291;">■ <span style="color:{_COL_PRIMARY}">■</span> 増額シナリオ</span>'
@@ -283,21 +279,17 @@ for _, row in df.iterrows():
 
 eff_df = pd.DataFrame(eff_rows)
 
-_ni2, _pi2 = 0, 0
+_gi2 = 0
 eff_colors = []
 for _, r2 in eff_df.iterrows():
     if '最適配分' in str(r2['label']):
         eff_colors.append(_COL_GREEN)
     elif abs(r2['scenario']) < 0.001:
         eff_colors.append(_COL_MID)
-    elif r2['scenario'] < 0:
-        t = _ni2 / max(len(_neg_rows)-1, 1)
-        eff_colors.append(_interp_hex('#FBECD7', _COL_AMBER, t))
-        _ni2 += 1
     else:
-        t = _pi2 / max(len(_pos_rows)-1, 1)
+        t = _gi2 / max(len(_grad_rows)-1, 1)
         eff_colors.append(_interp_hex(_COL_LIGHT, _COL_PRIMARY, t))
-        _pi2 += 1
+        _gi2 += 1
 
 fig_eff = go.Figure()
 fig_eff.add_trace(go.Bar(

@@ -128,8 +128,8 @@ if True:  # 以前のタブを廃止し直接レンダリング
         st.markdown("""<style>
         .mp-hdr{display:grid;grid-template-columns:2fr 2fr 1.4fr 0.6fr;
                 gap:0 12px;padding:6px 4px;
-                background:#F3F7F4;border-radius:6px 6px 0 0;
-                border:1px solid #DAEBE5;border-bottom:none;margin-bottom:0;}
+                background:#F3F7F4;border-radius:6px;
+                border:1px solid #DAEBE5;margin-bottom:10px;}
         .mp-hdr span{font-size:11px;font-weight:600;color:#5C9291;
                      text-transform:uppercase;letter-spacing:.06em;}
         </style>""", unsafe_allow_html=True)
@@ -200,7 +200,6 @@ if True:  # 以前のタブを廃止し直接レンダリング
             '分析精度（試行回数）',
             list(_trial_presets.keys()),
             index=1,
-            horizontal=True,
             label_visibility='collapsed',
         )
         n_trials = _trial_presets[_trial_choice]

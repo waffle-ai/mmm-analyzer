@@ -20,7 +20,7 @@ _COL_MID     = '#5C9291'
 _COL_LIGHT   = '#A2CEBF'
 
 st.title('予算配分')
-st.caption('現在の予算配分をROI比例に最適化した場合のCV改善量と、チャネルごとの増減額（Before/After）が分かります。')
+st.markdown('<p class="page-lede">現在の予算配分をROI比例に最適化した場合のCV改善量と、チャネルごとの増減額（Before/After）が分かります。</p>', unsafe_allow_html=True)
 
 if not st.session_state.get('job_info'):
     _recovered = r.find_latest_job()
@@ -187,7 +187,7 @@ st.divider()
 # ── 円グラフ（現状 vs 最適）───────────────────────────────────────────────
 ch_order = valid_df['チャネル'].tolist()
 
-def _grad_n(n, c0='#A2CEBF', c1='#315E6D'):
+def _grad_n(n, c0='#A2CEBF', c1='#113311'):
     if n == 1: return [c1]
     r0,g0,b0 = int(c0[1:3],16),int(c0[3:5],16),int(c0[5:7],16)
     r1,g1,b1 = int(c1[1:3],16),int(c1[3:5],16),int(c1[5:7],16)

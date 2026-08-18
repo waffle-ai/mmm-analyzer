@@ -21,4 +21,4 @@ CHANNEL_KEYWORDS_EXT: dict = {**_BASE, **_EXTENDED}
 # UIドロップダウン用: 汎用チャネル + 拡張チャネルのみ
 # 秤クライアント専用（SEM_PC/MOBILE/TABLET, MOVIE_*, DEMAND_*, Pmax_*, X_XT/LP/MV/TDL/OTHER 系）
 # および CORDER クライアント専用（K_PLAZA, BSIJ 等）は除外済み
-CHANNEL_OPTIONS: list[str] = ['（未マッピング）'] + list({**_GENERIC, **_EXTENDED}.keys())
+CHANNEL_OPTIONS: list[str] = ['（未マッピング）'] + sorted({**_GENERIC, **_EXTENDED}.keys(), key=str.lower)

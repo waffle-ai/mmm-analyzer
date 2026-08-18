@@ -370,11 +370,20 @@ button[data-testid="stTooltipHoverTarget"]:hover svg,
 ═══════════════════════════════════════════════════ */
 [data-testid="stDataFrame"] [role="columnheader"],
 [data-testid="stDataEditorGrid"] [role="columnheader"] {
-    background-color: #F3F7F4 !important;
-    color:            #5C9291 !important;
+    background-color: #DAEBE5 !important;
+    color:            #315E6D !important;
     font-weight:      600     !important;
     font-size:        12px    !important;
     letter-spacing:   .04em   !important;
+}
+
+/* 各分析結果ページ — 見出し直下のリード文 */
+.page-lede {
+    color:          #314858 !important;
+    font-size:      15px    !important;
+    line-height:    1.7     !important;
+    padding-bottom: 14px    !important;
+    margin:         0       !important;
 }
 
 /* 無効化されたテキスト入力（マッピング確認：元の列名）— 視認性確保 */
