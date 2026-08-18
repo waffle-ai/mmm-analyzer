@@ -41,11 +41,11 @@ else:
     status = r.get_job_status(job_info)
     if status['status'] == 'running':
         st.info('分析実行中です。完了後にご確認ください。')
-        st.page_link('pages/3_結果.py', label='← ROI分析ページで進捗を確認')
+        st.page_link('pages/3_結果.py', label='← ROI・CPA分析ページで進捗を確認')
         st.stop()
     elif status['status'] == 'failed':
         st.error('分析が失敗しました。')
-        st.page_link('pages/3_結果.py', label='← ROI分析ページを確認')
+        st.page_link('pages/3_結果.py', label='← ROI・CPA分析ページを確認')
         st.stop()
     summary = r.load_summary(status['json_path'])
 
@@ -85,46 +85,29 @@ mc_l  = _mcr_lbl(_mcr)
 # ── モデル精度指標カード ───────────────────────────────────────────────────
 st.subheader('精度指標サマリー')
 
-st.markdown("""<style>
-.kpi-row{display:flex;gap:1px;background:#C5DFD9;border-radius:10px;overflow:visible;margin-bottom:24px;}
-.kpi-cell{flex:1;background:#F9FDFC;padding:12px 14px;min-width:0;position:relative;}
-.kpi-row .kpi-cell:first-child{border-radius:10px 0 0 10px;}
-.kpi-row .kpi-cell:last-child{border-radius:0 10px 10px 0;}
-.kpi-lbl{font-size:12px;color:#5C9291;text-transform:uppercase;letter-spacing:.06em;
-         display:flex;align-items:center;gap:5px;}
-.kpi-lbl-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
-.kpi-val{font-size:22px;font-weight:700;color:#314858;line-height:1.3;margin-top:5px;
-         display:flex;align-items:center;gap:6px;}
-.kpi-badge{font-size:11px;padding:2px 6px;border-radius:3px;flex-shrink:0;line-height:1.5;}
-.b-s{background:#315E6D;color:#fff;}
-.b-a{background:#7EBEAB;color:#314858;}
-.b-b{background:#CB8013;color:#fff;}
-.b-c{background:#999;color:#fff;}
-</style>""", unsafe_allow_html=True)
-
 _mcr_str  = f'{_mcr:.1f}%'
 _rssd_str = f'{_rssd:.3f}' if _rssd is not None else 'N/A'
 
-st.markdown(f"""<div class="kpi-row">
-  <div class="kpi-cell">
-    <div class="kpi-lbl"><span class="kpi-lbl-text">説明力</span><span class="lq">?<span class="lq-tip">R²（決定係数）。成果の何%をモデルが説明できているかを示します。<br>◎ ≥0.90 &nbsp;○ ≥0.85 &nbsp;△ ≥0.80 &nbsp;× それ未満<br><br>1.0に近いほどモデルが実績をよく再現しています。0.85以上が実務の合格ラインです。</span></span></div>
-    <div class="kpi-val">{_r2:.3f}<span class="kpi-badge {_badge_cls(r2_l)}">{r2_l}</span></div>
+st.markdown(f"""<div class="mmm-card-grid" style="margin-bottom:24px;">
+  <div class="mmm-card">
+    <div class="mmm-card-lbl">説明力<span class="lq">?<span class="lq-tip">R²（決定係数）。成果の何%をモデルが説明できているかを示します。<br>◎ ≥0.90 &nbsp;○ ≥0.85 &nbsp;△ ≥0.80 &nbsp;× それ未満<br><br>1.0に近いほどモデルが実績をよく再現しています。0.85以上が実務の合格ラインです。</span></span></div>
+    <div class="mmm-card-val">{_r2:.3f}<span class="kpi-badge {_badge_cls(r2_l)}">{r2_l}</span></div>
   </div>
-  <div class="kpi-cell">
-    <div class="kpi-lbl"><span class="kpi-lbl-text">予測精度</span><span class="lq">?<span class="lq-tip">NRMSE（学習データ）。モデルが学習データをどれだけ正確に予測できているかを示します。<br>◎ &lt;0.10 &nbsp;○ &lt;0.12 &nbsp;△ &lt;0.15 &nbsp;× それ以上<br><br>学習誤差と検証誤差の差が大きい場合は過学習の可能性があります。</span></span></div>
-    <div class="kpi-val">{_nrmse_t:.3f}<span class="kpi-badge {_badge_cls(nt_l)}">{nt_l}</span></div>
+  <div class="mmm-card">
+    <div class="mmm-card-lbl">予測精度<span class="lq">?<span class="lq-tip">NRMSE（学習データ）。モデルが学習データをどれだけ正確に予測できているかを示します。<br>◎ &lt;0.10 &nbsp;○ &lt;0.12 &nbsp;△ &lt;0.15 &nbsp;× それ以上<br><br>学習誤差と検証誤差の差が大きい場合は過学習の可能性があります。</span></span></div>
+    <div class="mmm-card-val">{_nrmse_t:.3f}<span class="kpi-badge {_badge_cls(nt_l)}">{nt_l}</span></div>
   </div>
-  <div class="kpi-cell">
-    <div class="kpi-lbl"><span class="kpi-lbl-text">汎化性能</span><span class="lq">?<span class="lq-tip">NRMSE（ホールドアウト）。未学習データへの予測誤差で汎化性能を示します。<br>◎ &lt;0.15 &nbsp;○ &lt;0.20 &nbsp;△ &lt;0.25 &nbsp;× それ以上<br><br>学習NRMSEと大きく乖離している場合、特定期間への過適合が起きている可能性があります。</span></span></div>
-    <div class="kpi-val">{_nrmse_h:.3f}<span class="kpi-badge {_badge_cls(nh_l)}">{nh_l}</span></div>
+  <div class="mmm-card">
+    <div class="mmm-card-lbl">汎化性能<span class="lq">?<span class="lq-tip">NRMSE（ホールドアウト）。未学習データへの予測誤差で汎化性能を示します。<br>◎ &lt;0.15 &nbsp;○ &lt;0.20 &nbsp;△ &lt;0.25 &nbsp;× それ以上<br><br>学習NRMSEと大きく乖離している場合、特定期間への過適合が起きている可能性があります。</span></span></div>
+    <div class="mmm-card-val">{_nrmse_h:.3f}<span class="kpi-badge {_badge_cls(nh_l)}">{nh_l}</span></div>
   </div>
-  <div class="kpi-cell">
-    <div class="kpi-lbl"><span class="kpi-lbl-text">配分整合性</span><span class="lq">?<span class="lq-tip">RSSD。モデルが推定するROI比率と、実際の広告費配分比率の乖離度です。<br>◎ 0.10〜0.20 &nbsp;○ ≤0.30 &nbsp;△ ≤0.40 &nbsp;× それ以外<br><br>低すぎる（&lt;0.10）とチャネル間の差別化が弱く、高すぎると配分とROIが大きく乖離しています。</span></span></div>
-    <div class="kpi-val">{_rssd_str}<span class="kpi-badge {_badge_cls(rs_l)}">{rs_l}</span></div>
+  <div class="mmm-card">
+    <div class="mmm-card-lbl">配分整合性<span class="lq">?<span class="lq-tip">RSSD。モデルが推定するROI比率と、実際の広告費配分比率の乖離度です。<br>◎ 0.10〜0.20 &nbsp;○ ≤0.30 &nbsp;△ ≤0.40 &nbsp;× それ以外<br><br>低すぎる（&lt;0.10）とチャネル間の差別化が弱く、高すぎると配分とROIが大きく乖離しています。</span></span></div>
+    <div class="mmm-card-val">{_rssd_str}<span class="kpi-badge {_badge_cls(rs_l)}">{rs_l}</span></div>
   </div>
-  <div class="kpi-cell">
-    <div class="kpi-lbl"><span class="kpi-lbl-text">媒体帰属率</span><span class="lq">?<span class="lq-tip">MCR（Media Contribution Rate）。全成果のうち広告施策が起因する割合（sqrt空間）です。<br>◎ ≥15% &nbsp;○ ≥8% &nbsp;△ ≥3% &nbsp;× それ未満<br><br>低い場合はブランド・自然流入など広告以外の要因が大きく、ROI推定精度に影響します。</span></span></div>
-    <div class="kpi-val">{_mcr_str}<span class="kpi-badge {_badge_cls(mc_l)}">{mc_l}</span></div>
+  <div class="mmm-card">
+    <div class="mmm-card-lbl">媒体帰属率<span class="lq">?<span class="lq-tip lq-tip-left">MCR（Media Contribution Rate）。全成果のうち広告施策が起因する割合（sqrt空間）です。<br>◎ ≥15% &nbsp;○ ≥8% &nbsp;△ ≥3% &nbsp;× それ未満<br><br>低い場合はブランド・自然流入など広告以外の要因が大きく、ROI推定精度に影響します。</span></span></div>
+    <div class="mmm-card-val">{_mcr_str}<span class="kpi-badge {_badge_cls(mc_l)}">{mc_l}</span></div>
   </div>
 </div>""", unsafe_allow_html=True)
 
@@ -193,6 +176,67 @@ else:
     st.error(f'MAPE {_mape*100:.1f}%（12%以上）。予測誤差が大きく、モデルの見直しを推奨します。')
 
 st.divider()
+
+# ── 実測と予測の比較 ────────────────────────────────────────────────────────
+_avp = summary.get('actual_vs_pred', {})
+if _avp.get('dates_train'):
+    st.subheader('実測と予測の比較')
+
+    _dt_train = pd.to_datetime(_avp['dates_train'])
+    _at_train = _avp['actual_train']
+    _pd_train = _avp['pred_train']
+    _dt_hold  = pd.to_datetime(_avp.get('dates_hold', []))
+    _at_hold  = _avp.get('actual_hold', [])
+    _pd_hold  = _avp.get('pred_hold', [])
+    _cv_col   = 'CV（金額）' if _is_monetary else 'CV'
+
+    fig_avp = go.Figure()
+    fig_avp.add_trace(go.Scatter(x=_dt_train, y=_at_train, mode='lines', name='実測',
+                                  line=dict(color=_COL_PRIMARY, width=2)))
+    fig_avp.add_trace(go.Scatter(x=_dt_train, y=_pd_train, mode='lines', name='予測',
+                                  line=dict(color=_COL_AMBER, width=1.6, dash='dash')))
+    if len(_dt_hold):
+        fig_avp.add_trace(go.Scatter(x=_dt_hold, y=_at_hold, mode='lines', name='実測（検証期間）',
+                                      line=dict(color=_COL_GREEN, width=2)))
+        fig_avp.add_trace(go.Scatter(x=_dt_hold, y=_pd_hold, mode='lines', name='予測（検証期間）',
+                                      line=dict(color=_COL_AMBER, width=1.6, dash='dot')))
+        fig_avp.add_vline(x=_dt_hold[0], line_dash='dash', line_color='#999',
+                           annotation_text='検証期間', annotation_position='top right')
+    fig_avp.update_layout(
+        yaxis_title=_cv_col,
+        xaxis=dict(gridcolor='#DAEBE5'),
+        yaxis=dict(gridcolor='#DAEBE5'),
+        height=340,
+        legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1),
+        plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=20, r=20, t=20, b=10),
+    )
+    st.plotly_chart(fig_avp, use_container_width=True)
+
+    _dt_all = list(_dt_train) + list(_dt_hold)
+    _residuals = np.array(list(_at_train) + list(_at_hold)) - np.array(list(_pd_train) + list(_pd_hold))
+    _res_colors = [_COL_PRIMARY if v >= 0 else _COL_AMBER for v in _residuals]
+
+    fig_res = go.Figure(go.Bar(x=_dt_all, y=_residuals, marker_color=_res_colors))
+    fig_res.add_hline(y=0, line_color='#999', line_width=1)
+    fig_res.update_layout(
+        yaxis_title='残差',
+        xaxis=dict(gridcolor='#DAEBE5'),
+        yaxis=dict(gridcolor='#DAEBE5'),
+        height=180,
+        showlegend=False,
+        plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=20, r=20, t=10, b=20),
+    )
+    st.plotly_chart(fig_res, use_container_width=True)
+
+    _holdout_n = len(_dt_hold)
+    st.caption(
+        f'モデルが実際の{_cv_col}をどれだけ正確に予測できているかを示します'
+        + (f'（右端{_holdout_n}期間は、未学習データによる検証期間）。' if _holdout_n else '。')
+    )
+
+    st.divider()
 
 # ── フォレストプロット（ROI/ROAS信頼区間） ────────────────────────────────
 st.subheader(f'{_eff_label} 信頼区間（フォレストプロット）')
@@ -294,63 +338,3 @@ else:
     )
     st.plotly_chart(fig_fp, use_container_width=True)
     st.caption(f'◆ = {_eff_label}点推定値。このモデルでは信頼区間（CI）は未対応です。')
-
-# ── 実測と予測の比較 ────────────────────────────────────────────────────────
-_avp = summary.get('actual_vs_pred', {})
-if _avp.get('dates_train'):
-    st.divider()
-    st.subheader('実測と予測の比較')
-
-    _dt_train = pd.to_datetime(_avp['dates_train'])
-    _at_train = _avp['actual_train']
-    _pd_train = _avp['pred_train']
-    _dt_hold  = pd.to_datetime(_avp.get('dates_hold', []))
-    _at_hold  = _avp.get('actual_hold', [])
-    _pd_hold  = _avp.get('pred_hold', [])
-    _cv_col   = 'CV（金額）' if _is_monetary else 'CV'
-
-    fig_avp = go.Figure()
-    fig_avp.add_trace(go.Scatter(x=_dt_train, y=_at_train, mode='lines', name='実測',
-                                  line=dict(color=_COL_PRIMARY, width=2)))
-    fig_avp.add_trace(go.Scatter(x=_dt_train, y=_pd_train, mode='lines', name='予測',
-                                  line=dict(color=_COL_AMBER, width=1.6, dash='dash')))
-    if len(_dt_hold):
-        fig_avp.add_trace(go.Scatter(x=_dt_hold, y=_at_hold, mode='lines', name='実測（検証期間）',
-                                      line=dict(color=_COL_GREEN, width=2)))
-        fig_avp.add_trace(go.Scatter(x=_dt_hold, y=_pd_hold, mode='lines', name='予測（検証期間）',
-                                      line=dict(color=_COL_AMBER, width=1.6, dash='dot')))
-        fig_avp.add_vline(x=_dt_hold[0], line_dash='dash', line_color='#999',
-                           annotation_text='検証期間', annotation_position='top right')
-    fig_avp.update_layout(
-        yaxis_title=_cv_col,
-        xaxis=dict(gridcolor='#DAEBE5'),
-        yaxis=dict(gridcolor='#DAEBE5'),
-        height=340,
-        legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1),
-        plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
-        margin=dict(l=20, r=20, t=20, b=10),
-    )
-    st.plotly_chart(fig_avp, use_container_width=True)
-
-    _dt_all = list(_dt_train) + list(_dt_hold)
-    _residuals = np.array(list(_at_train) + list(_at_hold)) - np.array(list(_pd_train) + list(_pd_hold))
-    _res_colors = [_COL_PRIMARY if v >= 0 else _COL_AMBER for v in _residuals]
-
-    fig_res = go.Figure(go.Bar(x=_dt_all, y=_residuals, marker_color=_res_colors))
-    fig_res.add_hline(y=0, line_color='#999', line_width=1)
-    fig_res.update_layout(
-        yaxis_title='残差',
-        xaxis=dict(gridcolor='#DAEBE5'),
-        yaxis=dict(gridcolor='#DAEBE5'),
-        height=180,
-        showlegend=False,
-        plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
-        margin=dict(l=20, r=20, t=10, b=20),
-    )
-    st.plotly_chart(fig_res, use_container_width=True)
-
-    _holdout_n = len(_dt_hold)
-    st.caption(
-        f'モデルが実際の{_cv_col}をどれだけ正確に予測できているかを示します'
-        + (f'（右端{_holdout_n}期間は、未学習データによる検証期間）。' if _holdout_n else '。')
-    )

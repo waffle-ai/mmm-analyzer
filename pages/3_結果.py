@@ -27,7 +27,7 @@ _SAT_COLORS = {
     '係数ゼロ':   '#CCCCCC',
 }
 
-st.title('ROI分析')
+st.title('ROI・CPA分析')
 st.markdown('<p class="page-lede">各チャネルの費用対効果（ROI・CPA・限界ROI）を横断比較し、どこに投資すれば最も効率良くCVを増やせるかが分かります。</p>', unsafe_allow_html=True)
 
 if not st.session_state.get('job_info'):
@@ -145,13 +145,8 @@ else:
     .kpi-row .kpi-cell:last-child{border-radius:0 10px 10px 0;}
     .kpi-lbl{font-size:10px;color:#5C9291;text-transform:uppercase;letter-spacing:.08em;
              white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .kpi-val{font-size:19px;font-weight:700;color:#314858;line-height:1.3;margin-top:3px;
+    .kpi-val{font-size:20px;font-weight:700;color:#314858;line-height:1.3;margin-top:3px;
              display:flex;align-items:center;gap:6px;}
-    .kpi-badge{font-size:10px;padding:2px 6px;border-radius:3px;flex-shrink:0;line-height:1.5;}
-    .b-s{background:#315E6D;color:#fff;}
-    .b-a{background:#7EBEAB;color:#314858;}
-    .b-b{background:#CB8013;color:#fff;}
-    .b-c{background:#999;color:#fff;}
     .kpi-up{color:#315E6D!important;}
     .kpi-amber{color:#CB8013!important;}
     .kpi-tip{

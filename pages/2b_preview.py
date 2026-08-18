@@ -9,6 +9,8 @@ sys.path.insert(0, str(_HERE.parent))
 import pandas as pd
 import streamlit as st
 
+import runner as r
+
 st.title('データプレビュー')
 
 if not st.session_state.get('detect_result'):
@@ -24,7 +26,12 @@ if _excel_path and Path(_excel_path).exists():
         with st.spinner('データを読み込み中...'):
             df_prev = pd.read_excel(_excel_path, nrows=50)
         st.caption(f'最初の {min(50, len(df_prev))} 行 ／ {len(df_prev.columns)} 列を表示しています。')
-        st.dataframe(df_prev, use_container_width=True, hide_index=True)
+        _num_cols = list(df_prev.select_dtypes(include='number').columns)
+        _html = r.sc_table_html(df_prev.fillna(''), num_cols=_num_cols)
+        st.markdown(
+            f'<div style="max-height:480px;overflow:auto;">{_html}</div>',
+            unsafe_allow_html=True,
+        )
     except Exception as e:
         st.error(f'プレビュー読み込みエラー: {e}')
 else:

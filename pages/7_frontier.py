@@ -79,7 +79,7 @@ if _max_eff > 0:
     col_a, col_b = st.columns([2, 1])
     with col_a:
         st.markdown(f"""
-        <div style="background:#F3F7F4;border-radius:10px;padding:18px 22px;border:1px solid #DAEBE5;">
+        <div style="background:#F3F7F4;border-radius:10px;padding:18px 22px;box-shadow:0 1px 3px rgba(49,72,88,.08);">
           <div style="color:#5C9291;font-size:11px;text-transform:uppercase;letter-spacing:.08em;
                margin-bottom:6px;">効率的な投資上限（全チャネル合計）</div>
           <div style="font-size:32px;font-weight:800;color:#314858;">
@@ -96,7 +96,7 @@ if _max_eff > 0:
         _color_pct   = _COL_PRIMARY if _pct_to_max < 80 else _COL_AMBER if _pct_to_max < 100 else '#CB8013'
         st.markdown(f"""
         <div style="background:#F3F7F4;border-radius:10px;padding:18px 22px;
-                    border:1px solid #DAEBE5;text-align:center;">
+                    box-shadow:0 1px 3px rgba(49,72,88,.08);text-align:center;">
           <div style="color:#5C9291;font-size:11px;text-transform:uppercase;letter-spacing:.08em;
                margin-bottom:6px;">現在の使用率</div>
           <div style="font-size:32px;font-weight:800;color:{_color_pct};">

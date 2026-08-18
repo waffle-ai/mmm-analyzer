@@ -19,7 +19,7 @@ _COL_GREEN   = '#7EBEAB'
 _COL_MID     = '#5C9291'
 _COL_LIGHT   = '#A2CEBF'
 
-st.title('予算配分')
+st.title('予算配分分析')
 st.markdown('<p class="page-lede">現在の予算配分をROI比例に最適化した場合のCV改善量と、チャネルごとの増減額（Before/After）が分かります。</p>', unsafe_allow_html=True)
 
 if not st.session_state.get('job_info'):
@@ -41,11 +41,11 @@ else:
     status = r.get_job_status(job_info)
     if status['status'] == 'running':
         st.info('分析実行中です。完了後にご確認ください。')
-        st.page_link('pages/3_結果.py', label='← ROI分析ページで進捗を確認')
+        st.page_link('pages/3_結果.py', label='← ROI・CPA分析ページで進捗を確認')
         st.stop()
     elif status['status'] == 'failed':
         st.error('分析が失敗しました。')
-        st.page_link('pages/3_結果.py', label='← ROI分析ページを確認')
+        st.page_link('pages/3_結果.py', label='← ROI・CPA分析ページを確認')
         st.stop()
     summary = r.load_summary(status['json_path'])
 
@@ -100,7 +100,7 @@ with b3:
     st.markdown(
         f'<div class="lbl-q" style="margin-bottom:4px;">'
         f'予算 +{int(_budget_inc*100)}% 増額後'
-        f'<span class="lq">?<span class="lq-tip">総広告費を {int(_budget_inc*100)}% 増額し、かつ最適配分した場合の推定CV増加率。</span></span>'
+        f'<span class="lq">?<span class="lq-tip lq-tip-left">総広告費を {int(_budget_inc*100)}% 増額し、かつ最適配分した場合の推定CV増加率。</span></span>'
         f'</div>',
         unsafe_allow_html=True,
     )
@@ -173,14 +173,19 @@ def _diff_color(x, is_monetary):
 
 st.caption(f'現状 vs {_opt_label} の差分')
 disp_sim = sim_df[['チャネル', _eff_label, '広告費 (万円)', '最適配分 (万円)', '差分 (万円)']].copy()
-st.dataframe(
-    disp_sim.style.map(
-        lambda x: _diff_color(x, _is_monetary),
-        subset=['差分 (万円)'],
-    ),
-    use_container_width=True,
-    hide_index=True,
+_num_cols = [_eff_label, '広告費 (万円)', '最適配分 (万円)', '差分 (万円)']
+_html = r.sc_table_html(
+    disp_sim,
+    num_cols=_num_cols,
+    cell_styles={'差分 (万円)': lambda x: _diff_color(x, _is_monetary)},
+    formatters={
+        _eff_label:       (lambda v: f'{v:.1f}%') if _is_monetary else (lambda v: f'¥{int(v):,}'),
+        '広告費 (万円)':   lambda v: f'{v:.1f}万円',
+        '最適配分 (万円)': lambda v: f'{v:.1f}万円',
+        '差分 (万円)':     lambda v: f'{v:+.1f}万円',
+    },
 )
+st.markdown(_html, unsafe_allow_html=True)
 
 st.divider()
 

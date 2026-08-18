@@ -343,7 +343,7 @@ button[data-testid="stTooltipHoverTarget"]:hover svg,
 /* ═══════════════════════════════════════════════════
    カスタム「?」ツールチップ — 全ページ共通
 ═══════════════════════════════════════════════════ */
-.lbl-q { display:inline-flex; align-items:center; gap:5px; }
+.lbl-q { display:inline-flex; align-items:center; gap:5px; font-size:14px; font-weight:600; }
 .lq {
     position:relative; display:inline-flex; align-items:center; justify-content:center;
     width:16px; height:16px; background:#9fa6b0; border-radius:50%;
@@ -372,12 +372,46 @@ button[data-testid="stTooltipHoverTarget"]:hover svg,
 ═══════════════════════════════════════════════════ */
 [data-testid="stDataFrame"] [role="columnheader"],
 [data-testid="stDataEditorGrid"] [role="columnheader"] {
-    background-color: #DAEBE5 !important;
-    color:            #315E6D !important;
+    background-color: #F3F7F4 !important;
+    color:            #5C9291 !important;
     font-weight:      600     !important;
-    font-size:        12px    !important;
-    letter-spacing:   .04em   !important;
+    font-size:        11px    !important;
+    letter-spacing:   .07em   !important;
 }
+
+/* ═══════════════════════════════════════════════════
+   カスタムHTMLテーブル — .sc-table（チャネル別スコアカード基準）
+   全ページの表形式UIはこのクラスに統一する
+═══════════════════════════════════════════════════ */
+.sc-table { width:100%; border-collapse:collapse; font-size:13px; }
+.sc-table th {
+    background:#F3F7F4; color:#5C9291; font-weight:600; font-size:11px;
+    text-transform:uppercase; letter-spacing:.07em; padding:8px 12px;
+    border-bottom:2px solid #DAEBE5; text-align:left;
+}
+.sc-table td { padding:9px 12px; border-bottom:1px solid #DAEBE5; color:#314858; }
+.sc-table tr:last-child td { border-bottom:none; }
+.sc-table tr:hover td { background:#F9FDFC; }
+.sc-table .num-col { text-align:right !important; font-variant-numeric:tabular-nums; }
+
+/* ═══════════════════════════════════════════════════
+   カードUI — KPI・サマリー系で共通使用（summary.py基準）
+═══════════════════════════════════════════════════ */
+.mmm-card-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; }
+.mmm-card { background:#fff; border-radius:8px; padding:11px 14px; box-shadow:0 1px 3px rgba(49,72,88,.08); }
+.mmm-card-lbl {
+    color:#5C9291; font-size:10px; text-transform:uppercase; letter-spacing:.08em;
+    margin-bottom:3px; display:flex; align-items:center; gap:5px;
+}
+.mmm-card-val { font-size:20px; font-weight:700; color:#314858; line-height:1.3; display:flex; align-items:center; gap:6px; }
+.mmm-card-unit { font-size:12px; font-weight:400; color:#5C9291; }
+
+/* KPIグレードバッジ — 精度指標・ROI系で共通使用 */
+.kpi-badge { font-size:11px; padding:2px 6px; border-radius:3px; flex-shrink:0; line-height:1.5; }
+.b-s { background:#315E6D; color:#fff; }
+.b-a { background:#7EBEAB; color:#314858; }
+.b-b { background:#CB8013; color:#fff; }
+.b-c { background:#999; color:#fff; }
 
 /* 各分析結果ページ — 見出し直下のリード文 */
 .page-lede {

@@ -29,7 +29,7 @@ _SAT_COLORS = {
     '係数ゼロ':   '#C5DFD9',
 }
 
-st.title('チャネル詳細')
+st.title('チャネル分析')
 st.markdown('<p class="page-lede">チャネルごとの飽和曲線（どこで効果が頭打ちになるか）と、広告効果の持続期間（アドストック半減期）が視覚的に分かります。</p>', unsafe_allow_html=True)
 
 if not st.session_state.get('job_info'):
@@ -51,11 +51,11 @@ else:
     status = r.get_job_status(job_info)
     if status['status'] == 'running':
         st.info('分析実行中です。完了後にご確認ください。')
-        st.page_link('pages/3_結果.py', label='← ROI分析ページで進捗を確認')
+        st.page_link('pages/3_結果.py', label='← ROI・CPA分析ページで進捗を確認')
         st.stop()
     elif status['status'] == 'failed':
         st.error('分析が失敗しました。')
-        st.page_link('pages/3_結果.py', label='← ROI分析ページを確認')
+        st.page_link('pages/3_結果.py', label='← ROI・CPA分析ページを確認')
         st.stop()
     summary = r.load_summary(status['json_path'])
 
@@ -109,17 +109,6 @@ def _sat_badge(lbl):
     txt_c = '#ffffff' if lbl in ('伸び代あり', '適正域') else '#314858'
     return f'<span style="background:{c};color:{txt_c};padding:2px 8px;border-radius:999px;font-size:11px;">{lbl}</span>'
 
-st.markdown("""<style>
-.sc-table{width:100%;border-collapse:collapse;font-size:13px;}
-.sc-table th{background:#F3F7F4;color:#5C9291;font-weight:600;font-size:11px;
-             text-transform:uppercase;letter-spacing:.07em;padding:8px 12px;
-             border-bottom:2px solid #DAEBE5;text-align:left;}
-.sc-table td{padding:9px 12px;border-bottom:1px solid #DAEBE5;color:#314858;}
-.sc-table tr:last-child td{border-bottom:none;}
-.sc-table tr:hover td{background:#F9FDFC;}
-.num-col{text-align:right!important;font-variant-numeric:tabular-nums;}
-</style>""", unsafe_allow_html=True)
-
 rows_html = ''
 for _, row in valid_df.iterrows():
     eff_v   = row[_eff_label]
@@ -143,7 +132,7 @@ st.markdown(
     '<th class="num-col">貢献CV</th><th class="num-col">広告費</th>'
     f'<th class="num-col">限界{"ROAS/ROI" if _is_monetary else "CPA"}</th>'
     '<th>飽和度<span class="lq" style="vertical-align:middle;margin-left:5px;">?'
-    '<span class="lq-tip">伸び代あり＝まだ余裕あり<br>適正域＝効率的<br>飽和域＝頭打ち（追加投資の効果が薄い）</span></span></th>'
+    '<span class="lq-tip lq-tip-left">伸び代あり＝まだ余裕あり<br>適正域＝効率的<br>飽和域＝頭打ち（追加投資の効果が薄い）</span></span></th>'
     f'</tr></thead><tbody>{rows_html}</tbody></table>',
     unsafe_allow_html=True,
 )
@@ -293,6 +282,7 @@ if _has_lambda:
             '例: λ=0.7 なら 1週後も70%が持続、半減期は約1.9週</span></span></div>',
             unsafe_allow_html=True,
         )
-        st.dataframe(pd.DataFrame(hl_data), use_container_width=True, hide_index=True)
+        _hl_html = r.sc_table_html(pd.DataFrame(hl_data), num_cols=['λ（減衰率）', '効果の半減期（週）'])
+        st.markdown(_hl_html, unsafe_allow_html=True)
 else:
     st.info('アドストックパラメータが含まれていません。実際の分析データで確認できます。')

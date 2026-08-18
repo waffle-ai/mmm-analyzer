@@ -327,7 +327,7 @@ st.markdown('**詳細分析ページ**')
 c1, c2, c3 = st.columns(3)
 with c1:
     st.page_link('pages/6_model.py',  label='モデル精度 →')
-    st.page_link('pages/5_detail.py', label='チャネル詳細 →')
+    st.page_link('pages/5_detail.py', label='チャネル分析 →')
 with c2:
     st.page_link('pages/3_結果.py',   label='ROI・CPA分析 →')
     st.page_link('pages/4_budget.py', label='予算配分分析 →')

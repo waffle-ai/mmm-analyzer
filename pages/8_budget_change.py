@@ -12,12 +12,13 @@ import streamlit as st
 
 import runner as r
 
-_COL_PRIMARY = '#315E6D'
-_COL_GREEN   = '#7EBEAB'
-_COL_MID     = '#5C9291'
-_COL_LIGHT   = '#A2CEBF'
-_COL_AMBER   = '#CB8013'
-_MTERIA      = ['#315E6D', '#7EBEAB', '#5C9291', '#317680', '#A2CEBF', '#CB8013', '#C5DFD9']
+_COL_PRIMARY  = '#315E6D'
+_COL_GREEN    = '#7EBEAB'
+_COL_MID      = '#5C9291'
+_COL_LIGHT    = '#A2CEBF'
+_COL_LIGHTEST = '#E8F2EF'
+_COL_AMBER    = '#CB8013'
+_MTERIA       = ['#315E6D', '#7EBEAB', '#5C9291', '#317680', '#A2CEBF', '#CB8013', '#C5DFD9']
 
 st.title('予算増額・減額分析')
 st.markdown('<p class="page-lede">総広告費を±30%の範囲で増減したときの成果変化を試算します。各シナリオの費用対効果を見比べ、予算規模の判断に使えます。</p>', unsafe_allow_html=True)
@@ -164,20 +165,33 @@ def _interp_hex(c0, c1, t):
     b = int(int(c0[5:7],16) + (int(c1[5:7],16)-int(c0[5:7],16))*t)
     return f'#{r:02x}{g:02x}{b:02x}'
 
-_grad_rows = [row for _, row in df.iterrows()
-              if abs(row['scenario']) > 0.001 and '最適配分' not in str(row['label'])]
+def _scenario_bar_colors(rows_df):
+    """減額シナリオと増額シナリオでグラデーション範囲を分離して色リストを返す。
 
-bar_colors = []
-_gi = 0
-for _, row in df.iterrows():
-    if '最適配分' in str(row['label']):
-        bar_colors.append(_COL_GREEN)
-    elif abs(row['scenario']) < 0.001:
-        bar_colors.append(_COL_MID)
-    else:
-        t = _gi / max(len(_grad_rows)-1, 1)
-        bar_colors.append(_interp_hex(_COL_LIGHT, _COL_PRIMARY, t))
-        _gi += 1
+    減額側（左3本）は淡色域(_COL_LIGHTEST〜_COL_LIGHT)のみを使い、
+    増額側の濃いグラデーションと混ざって濃く見えないようにする。
+    """
+    dec_rows = [row for _, row in rows_df.iterrows() if row['scenario'] < -0.001]
+    inc_rows = [row for _, row in rows_df.iterrows()
+                if row['scenario'] > 0.001 and '最適配分' not in str(row['label'])]
+    colors = []
+    _di = _ii = 0
+    for _, row in rows_df.iterrows():
+        if '最適配分' in str(row['label']):
+            colors.append(_COL_GREEN)
+        elif abs(row['scenario']) < 0.001:
+            colors.append(_COL_MID)
+        elif row['scenario'] < 0:
+            t = _di / max(len(dec_rows) - 1, 1)
+            colors.append(_interp_hex(_COL_LIGHTEST, _COL_LIGHT, t))
+            _di += 1
+        else:
+            t = _ii / max(len(inc_rows) - 1, 1)
+            colors.append(_interp_hex(_COL_LIGHT, _COL_PRIMARY, t))
+            _ii += 1
+    return colors
+
+bar_colors = _scenario_bar_colors(df)
 
 fig_cv = go.Figure()
 fig_cv.add_trace(go.Bar(
@@ -230,22 +244,26 @@ st.subheader('シナリオ詳細')
 
 disp_df = df[['label', '推定広告費(万円)', '推定CV', 'CV増減(%)']].copy()
 disp_df.columns = ['シナリオ', '推定広告費（万円）', '推定CV（件）', 'CV増減（%）']
-disp_df['推定CV（件）'] = disp_df['推定CV（件）'].apply(lambda x: f'{int(x):,}')
+disp_df['シナリオ'] = disp_df['シナリオ'].apply(lambda s: str(s).replace('\n', ' '))
 
 def _color_pct(v):
-    if isinstance(v, str):
-        return ''
     if v > 0:
         return f'color: {_COL_PRIMARY}; font-weight: 600;'
     if v < 0:
         return f'color: {_COL_AMBER}; font-weight: 600;'
     return ''
 
-st.dataframe(
-    disp_df.style.map(_color_pct, subset=['CV増減（%）']),
-    use_container_width=True,
-    hide_index=True,
+_html = r.sc_table_html(
+    disp_df,
+    num_cols=['推定広告費（万円）', '推定CV（件）', 'CV増減（%）'],
+    cell_styles={'CV増減（%）': _color_pct},
+    formatters={
+        '推定広告費（万円）': lambda v: f'{v:,.1f}万円',
+        '推定CV（件）':       lambda v: f'{int(v):,}',
+        'CV増減（%）':        lambda v: f'{v:+.1f}%',
+    },
 )
+st.markdown(_html, unsafe_allow_html=True)
 
 st.divider()
 
@@ -279,17 +297,7 @@ for _, row in df.iterrows():
 
 eff_df = pd.DataFrame(eff_rows)
 
-_gi2 = 0
-eff_colors = []
-for _, r2 in eff_df.iterrows():
-    if '最適配分' in str(r2['label']):
-        eff_colors.append(_COL_GREEN)
-    elif abs(r2['scenario']) < 0.001:
-        eff_colors.append(_COL_MID)
-    else:
-        t = _gi2 / max(len(_grad_rows)-1, 1)
-        eff_colors.append(_interp_hex(_COL_LIGHT, _COL_PRIMARY, t))
-        _gi2 += 1
+eff_colors = _scenario_bar_colors(eff_df)
 
 fig_eff = go.Figure()
 fig_eff.add_trace(go.Bar(

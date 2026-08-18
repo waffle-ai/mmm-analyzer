@@ -9,6 +9,7 @@ StreamlitはログファイルをポーリングしてUIに表示する。
 - run_mmm.pyはすでに [HH:MM:SS] Step X... 形式でログを出している
 - 既存エンジンのコードを一切変更せずに使える
 """
+import html
 import json
 import subprocess
 import sys
@@ -238,3 +239,50 @@ def estimate_duration(n_trials: int, n_channels: int) -> str:
     if minutes < 5:
         return f'約{minutes}〜{minutes+2}分'
     return f'約{minutes}〜{minutes+5}分'
+
+
+def sc_table_html(
+    df, num_cols: list[str] | None = None, cell_styles: dict | None = None,
+    formatters: dict | None = None,
+) -> str:
+    """DataFrameを `.sc-table` 準拠のHTMLテーブル文字列に変換する。
+
+    st.dataframe/st.data_editorはcanvas描画のためCSSでボディまで統一できない。
+    表形式UIをアプリ全体で見た目そろえるため、この関数経由でHTMLテーブルとして描画する。
+
+    Parameters
+    ----------
+    df          : 表示対象のDataFrame
+    num_cols    : 右寄せ＋tabular-numsにする列名のリスト
+    cell_styles : {列名: (元の値) -> インラインstyle文字列 を返す関数} で個別セルに条件付き装飾を適用
+    formatters  : {列名: (元の値) -> 表示用文字列 を返す関数} で表示テキストを整形（未指定ならstr()）
+    """
+    num_cols = num_cols or []
+    cell_styles = cell_styles or {}
+    formatters = formatters or {}
+
+    thead_cells = []
+    for c in df.columns:
+        cls = ' class="num-col"' if c in num_cols else ''
+        thead_cells.append(f'<th{cls}>{html.escape(str(c))}</th>')
+
+    body_rows = []
+    for _, row in df.iterrows():
+        cells = []
+        for c in df.columns:
+            v = row[c]
+            cls = 'num-col' if c in num_cols else ''
+            style = cell_styles[c](v) if c in cell_styles else ''
+            text = formatters[c](v) if c in formatters else v
+            cls_attr = f' class="{cls}"' if cls else ''
+            style_attr = f' style="{style}"' if style else ''
+            cells.append(f'<td{cls_attr}{style_attr}>{html.escape(str(text))}</td>')
+        body_rows.append(f'<tr>{"".join(cells)}</tr>')
+
+    return (
+        '<table class="sc-table"><thead><tr>'
+        + ''.join(thead_cells)
+        + '</tr></thead><tbody>'
+        + ''.join(body_rows)
+        + '</tbody></table>'
+    )

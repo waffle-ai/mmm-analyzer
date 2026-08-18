@@ -54,13 +54,6 @@ st.divider()
 
 if True:  # 以前のタブを廃止し直接レンダリング
 
-    st.markdown("""
-    <style>
-    .lbl-q { display:inline-flex; align-items:center; gap:5px; font-size:14px; font-weight:600;
-             margin-bottom:2px; }
-    </style>
-    """, unsafe_allow_html=True)
-
     # ── DATE/CV 列の確認 ─────────────────────────────────────────
     _date_default = mapping.get('date_col', '')
     _cv_default   = mapping.get('cv_col', '')
@@ -127,11 +120,10 @@ if True:  # 以前のタブを廃止し直接レンダリング
 
         st.markdown("""<style>
         .mp-hdr{display:grid;grid-template-columns:2fr 2fr 1.4fr 0.6fr;
-                gap:0 12px;padding:6px 4px;
-                background:#F3F7F4;border-radius:6px;
-                border:1px solid #DAEBE5;margin-bottom:10px;}
+                gap:0 12px;padding:8px 12px 6px;
+                background:#F3F7F4;border-bottom:2px solid #DAEBE5;margin-bottom:10px;}
         .mp-hdr span{font-size:11px;font-weight:600;color:#5C9291;
-                     text-transform:uppercase;letter-spacing:.06em;}
+                     text-transform:uppercase;letter-spacing:.07em;}
         </style>""", unsafe_allow_html=True)
         st.markdown(
             '<div class="mp-hdr">'
@@ -209,7 +201,7 @@ if True:  # 以前のタブを廃止し直接レンダリング
     with col_c:
         st.markdown(
             '<div class="lbl-q">シナリオB増額率 (%)'
-            '<span class="lq">?<span class="lq-tip">'
+            '<span class="lq">?<span class="lq-tip lq-tip-left">'
             '予算最適化シナリオBで何%増額した場合を試算するか。デフォルトは30%。'
             '</span></span></div>',
             unsafe_allow_html=True,
