@@ -43,8 +43,9 @@ if not st.session_state.get('job_info'):
         st.session_state['job_info'] = _recovered
         st.info('前回のジョブを表示しています。')
     else:
-        st.warning('まだ分析が開始されていません。')
-        st.page_link('pages/1_アップロード.py', label='← アップロードページへ')
+        st.markdown('データを読み込んで分析を開始すると、ここに媒体別ROIと予算配分の示唆が表示されます。')
+        if st.button('データを読み込む', type='primary'):
+            st.switch_page('pages/1_アップロード.py')
         st.stop()
 
 job_info = st.session_state['job_info']

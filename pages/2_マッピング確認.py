@@ -16,8 +16,9 @@ st.title('マッピング設定')
 
 # ── 前ページからのデータ確認 ─────────────────────────────────────────
 if not st.session_state.get('detect_result'):
-    st.warning('先にExcelをアップロードしてください。')
-    st.page_link('pages/1_アップロード.py', label='← アップロードページへ')
+    st.markdown('データを読み込むと、ここで列の対応を確認できます。')
+    if st.button('データを読み込む', type='primary'):
+        st.switch_page('pages/1_アップロード.py')
     st.stop()
 
 _is_demo    = st.session_state.get('demo_mode', False)
