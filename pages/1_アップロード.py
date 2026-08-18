@@ -118,8 +118,22 @@ if _logo_b64:
 else:
     st.title('SmartMMM')
 st.markdown(
-    'マーケティングミックスモデリング（MMM）で、各媒体のROIを可視化し、'
-    '予算配分の最適解を算出します。'
+    '<div style="color:#314858;font-size:14px;margin-bottom:10px;">'
+    '大企業だけの分析力を中小・ベンチャー企業の手に。'
+    '</div>',
+    unsafe_allow_html=True,
+)
+st.markdown(
+    '広告データを読み込むと、約30分で媒体別ROIと来月の予算配分の示唆が出ます。'
+    '結果はPPTXレポートで会議に持ち込めます。'
+)
+st.markdown(
+    '<div style="display:flex;gap:28px;flex-wrap:wrap;margin:10px 0 4px;">'
+    '<span style="color:#5C9291;font-size:13px;">1. データ読み込み（約5分）</span>'
+    '<span style="color:#5C9291;font-size:13px;">2. マッピング確認（約5分）</span>'
+    '<span style="color:#5C9291;font-size:13px;">3. 分析と結果確認（約20分）</span>'
+    '</div>',
+    unsafe_allow_html=True,
 )
 
 # ── デモボタン ────────────────────────────────────────────────────────────
