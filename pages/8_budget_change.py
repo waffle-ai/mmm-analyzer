@@ -249,7 +249,7 @@ def _color_pct(v):
     if v > 0:
         return f'color: {_COL_PRIMARY}; font-weight: 600;'
     if v < 0:
-        return f'color: {_COL_AMBER}; font-weight: 600;'
+        return f'color: {_COL_MID}; font-weight: 600;'
     return ''
 
 st.dataframe(

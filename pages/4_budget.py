@@ -175,7 +175,7 @@ def _diff_color(x, is_monetary):
     if good:
         return 'color: #315E6D; font-weight: 600;'
     if bad:
-        return 'color: #CB8013; font-weight: 600;'
+        return 'color: #5C9291; font-weight: 600;'
     return ''
 
 st.caption(f'現状 vs {_opt_label} の差分')
