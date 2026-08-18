@@ -90,10 +90,13 @@ if True:  # 以前のタブを廃止し直接レンダリング
 
     # ── チャネルマッピングテーブル ────────────────────────────────
     st.subheader('チャネルマッピング')
-    st.info(
-        '自動検出の結果です。内容を確認し、問題なければ**このままページ下の「分析を開始する」を押してOKです。**'
+    st.markdown(
+        '<div class="mmm-info-box">'
+        '自動検出の結果です。内容を確認し、問題なければ<strong>このままページ下の「分析を開始する」を押してOKです。</strong>'
         '　チャネル名や役割を変更したい場合はドロップダウンで修正できます。'
         '「（未マッピング）」にするとそのチャネルは分析から除外されます。'
+        '</div>',
+        unsafe_allow_html=True,
     )
 
     def _match_badge(score: float) -> str:
@@ -121,9 +124,9 @@ if True:  # 以前のタブを廃止し直接レンダリング
         st.markdown("""<style>
         .mp-hdr{display:grid;grid-template-columns:2fr 2fr 1.4fr 0.6fr;
                 gap:0 12px;padding:8px 12px 6px;
-                background:#F3F7F4;border-bottom:2px solid #DAEBE5;margin-bottom:10px;}
-        .mp-hdr span{font-size:11px;font-weight:600;color:#5C9291;
-                     text-transform:uppercase;letter-spacing:.07em;}
+                background:#DFEAE3;border-bottom:2px solid #DAEBE5;margin-bottom:10px;}
+        .mp-hdr span{font-size:11px;font-weight:700;color:#33625A;
+                     text-transform:uppercase;letter-spacing:.07em;text-align:center;}
         </style>""", unsafe_allow_html=True)
         st.markdown(
             '<div class="mp-hdr">'
@@ -313,5 +316,4 @@ if True:  # 以前のタブを廃止し直接レンダリング
             st.session_state['job_info'] = job_info
             st.switch_page('pages/summary.py')
 
-st.divider()
 st.page_link('pages/2b_preview.py', label='データプレビューを確認する →')

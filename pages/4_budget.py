@@ -109,10 +109,13 @@ with b3:
 # 投資効率フロンティア情報
 if _max_eff > 0:
     _max_eff_man = round(_max_eff / 10000, 0)
-    st.info(
-        f'**投資効率の上限目安:** 広告費 **{_max_eff_man:,.0f} 万円** が効率的な投資上限です。'
-        + (f'　目安CPA: **¥{_thr_cpa:,}**' if _thr_cpa > 0 else '')
+    st.markdown(
+        '<div class="mmm-info-box">'
+        f'<strong>投資効率の上限目安:</strong> 広告費 <strong>{_max_eff_man:,.0f} 万円</strong> が効率的な投資上限です。'
+        + (f'　目安CPA: <strong>¥{_thr_cpa:,}</strong>' if _thr_cpa > 0 else '')
         + '　これ以上の増額は費用対効果が大きく低下します。'
+        '</div>',
+        unsafe_allow_html=True,
     )
 
 st.divider()

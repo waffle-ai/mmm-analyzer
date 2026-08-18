@@ -105,10 +105,6 @@ else:
     def _pct_str(v):
         return f'+{v:.1f}%' if v >= 0 else f'{v:.1f}%'
 
-    _r2        = summary.get('r2', 0)
-    _nrmse_t   = summary.get('nrmse_train', 0)
-    _nrmse_h   = summary.get('nrmse_holdout', 0)
-    _mape      = summary.get('mape', 0)
     _total_cv  = summary.get('total_cv', 0)
     _cv_lift   = summary.get('cv_lift_pct', 0)
     _cv_lift_b = summary.get('cv_lift_pct_b', 0)
@@ -123,81 +119,22 @@ else:
     _eff_label   = 'ROAS / ROI' if _is_monetary else 'CPA'
     _eff_unit    = '%' if _is_monetary else '円'
 
-    def _r2_lbl(v):    return '◎' if v >= 0.90 else '○' if v >= 0.85 else '△' if v >= 0.80 else '×'
-    def _nrms_lbl(v):  return '◎' if v < 0.10  else '○' if v < 0.12  else '△' if v < 0.15  else '×'
-    def _nrmsh_lbl(v): return '◎' if v < 0.15  else '○' if v < 0.20  else '△' if v < 0.25  else '×'
-    def _mape_lbl(v):  return '◎' if v < 0.08  else '○' if v < 0.10  else '△' if v < 0.12  else '×'
-    def _badge_cls(l): return {'◎': 'b-s', '○': 'b-a', '△': 'b-b', '×': 'b-c'}.get(l, 'b-c')
+    _cv_lift_style   = f'color:{_COL_PRIMARY};' if _cv_lift   >= 0 else ''
+    _cv_lift_b_style = f'color:{_COL_AMBER};'   if _cv_lift_b >  0 else ''
 
-    r2_l = _r2_lbl(_r2);    r2_c  = _badge_cls(r2_l)
-    nt_l = _nrms_lbl(_nrmse_t); nt_c = _badge_cls(nt_l)
-    nh_l = _nrmsh_lbl(_nrmse_h); nh_c = _badge_cls(nh_l)
-    mp_l = _mape_lbl(_mape); mp_c = _badge_cls(mp_l)
-
-    cv_cls  = 'kpi-up'    if _cv_lift   >= 0 else ''
-    cvb_cls = 'kpi-amber' if _cv_lift_b >  0 else ''
-
-    # ── KPI ストリップ（ホバーツールチップ付き）──────────────────────────
-    st.markdown("""<style>
-    .kpi-row{display:flex;gap:1px;background:#C5DFD9;border-radius:10px;overflow:visible;margin-bottom:24px;}
-    .kpi-cell{flex:1;background:#F9FDFC;padding:12px 14px;min-width:0;position:relative;cursor:default;}
-    .kpi-row .kpi-cell:first-child{border-radius:10px 0 0 10px;}
-    .kpi-row .kpi-cell:last-child{border-radius:0 10px 10px 0;}
-    .kpi-lbl{font-size:10px;color:#5C9291;text-transform:uppercase;letter-spacing:.08em;
-             white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .kpi-val{font-size:20px;font-weight:700;color:#314858;line-height:1.3;margin-top:3px;
-             display:flex;align-items:center;gap:6px;}
-    .kpi-up{color:#315E6D!important;}
-    .kpi-amber{color:#CB8013!important;}
-    .kpi-tip{
-        visibility:hidden;opacity:0;
-        position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);
-        background:#314858;color:#F3F7F4;font-size:11.5px;padding:10px 14px;
-        border-radius:6px;width:230px;z-index:9999;
-        transition:opacity 0.15s;pointer-events:none;
-        white-space:normal;line-height:1.55;
-        box-shadow:0 4px 12px rgba(0,0,0,.25);
-    }
-    .kpi-cell:hover .kpi-tip{visibility:visible;opacity:1;}
-    .kpi-row .kpi-cell:first-child .kpi-tip{left:0;transform:none;}
-    .kpi-row .kpi-cell:last-child .kpi-tip{left:auto;right:0;transform:none;}
-    </style>""", unsafe_allow_html=True)
-
-    st.markdown(f"""<div class="kpi-row">
-      <div class="kpi-cell">
-        <div class="kpi-lbl">R²（決定係数）</div>
-        <div class="kpi-val">{_r2:.3f}<span class="kpi-badge {r2_c}">{r2_l}</span></div>
-        <div class="kpi-tip">成果の何%をモデルが説明できているかを示します。<br>◎ ≥0.90 &nbsp;○ ≥0.85 &nbsp;△ ≥0.80 &nbsp;× それ未満</div>
+    # ── CV改善サマリーカード ────────────────────────────────────────────
+    st.markdown(f"""<div class="mmm-card-grid" style="margin-bottom:24px;">
+      <div class="mmm-card">
+        <div class="mmm-card-lbl">CV実績<span class="lq">?<span class="lq-tip">分析期間の合計コンバージョン数（広告起因・ベースライン含む）。</span></span></div>
+        <div class="mmm-card-val">{_total_cv:,}<span class="mmm-card-unit">件</span></div>
       </div>
-      <div class="kpi-cell">
-        <div class="kpi-lbl">NRMSE 学習</div>
-        <div class="kpi-val">{_nrmse_t:.3f}<span class="kpi-badge {nt_c}">{nt_l}</span></div>
-        <div class="kpi-tip">学習データに対する予測誤差（小さいほど良い）。<br>◎ &lt;0.10 &nbsp;○ &lt;0.12 &nbsp;△ &lt;0.15 &nbsp;× それ以上</div>
+      <div class="mmm-card">
+        <div class="mmm-card-lbl">同予算 CV改善<span class="lq">?<span class="lq-tip">同じ総広告費のまま配分をROI比例に最適化した場合の推定CV増加率。</span></span></div>
+        <div class="mmm-card-val" style="{_cv_lift_style}">{_pct_str(_cv_lift)}</div>
       </div>
-      <div class="kpi-cell">
-        <div class="kpi-lbl">NRMSE 検証</div>
-        <div class="kpi-val">{_nrmse_h:.3f}<span class="kpi-badge {nh_c}">{nh_l}</span></div>
-        <div class="kpi-tip">未学習データへの予測誤差（汎化性能の指標）。<br>◎ &lt;0.15 &nbsp;○ &lt;0.20 &nbsp;△ &lt;0.25 &nbsp;× それ以上</div>
-      </div>
-      <div class="kpi-cell">
-        <div class="kpi-lbl">MAPE</div>
-        <div class="kpi-val">{_mape*100:.1f}%<span class="kpi-badge {mp_c}">{mp_l}</span></div>
-        <div class="kpi-tip">実績値とモデル予測の平均乖離率。<br>◎ &lt;8% &nbsp;○ &lt;10% &nbsp;△ &lt;12% &nbsp;× それ以上</div>
-      </div>
-      <div class="kpi-cell">
-        <div class="kpi-lbl">CV 実績</div>
-        <div class="kpi-val">{_total_cv:,}件</div>
-        <div class="kpi-tip">分析期間の合計コンバージョン数（広告起因・ベースライン含む）。</div>
-      </div>
-      <div class="kpi-cell">
-        <div class="kpi-lbl">同予算 CV改善</div>
-        <div class="kpi-val {cv_cls}">{_pct_str(_cv_lift)}</div>
-        <div class="kpi-tip">同じ総広告費のまま配分をROI比例に最適化した場合の推定CV増加率。</div>
-      </div>
-      <div class="kpi-cell">
-        <div class="kpi-lbl">増額{int(_budget_inc*100)}% CV改善</div>
-        <div class="kpi-val {cvb_cls}">{_pct_str(_cv_lift_b)}</div>
-        <div class="kpi-tip">総広告費を{int(_budget_inc*100)}%増額かつ最適配分した場合の推定CV増加率。</div>
+      <div class="mmm-card">
+        <div class="mmm-card-lbl">増額{int(_budget_inc*100)}% CV改善<span class="lq">?<span class="lq-tip lq-tip-left">総広告費を{int(_budget_inc*100)}%増額かつ最適配分した場合の推定CV増加率。</span></span></div>
+        <div class="mmm-card-val" style="{_cv_lift_b_style}">{_pct_str(_cv_lift_b)}</div>
       </div>
     </div>""", unsafe_allow_html=True)
 
@@ -342,6 +279,3 @@ else:
                 mime='application/vnd.openxmlformats-officedocument.presentationml.presentation',
                 type='primary',
             )
-
-    st.divider()
-    st.page_link('pages/1_アップロード.py', label='← 新しい分析を開始する')

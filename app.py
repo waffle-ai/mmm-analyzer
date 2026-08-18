@@ -332,12 +332,17 @@ button[data-testid="stTooltipHoverTarget"]:hover svg,
     background-color: #315E6D !important;
     border:           none    !important;
     color:            #FFFFFF !important;
-    font-weight:      600     !important;
+    font-weight:      700     !important;
     transition:       background-color .15s;
 }
 .stButton > button[kind="primary"]:hover,
 .stFormSubmitButton > button[kind="primary"]:hover {
     background-color: #2A5160 !important;
+}
+
+[data-testid="stPageLink"],
+[data-testid="stPageLink"] * {
+    font-weight: 700 !important;
 }
 
 /* ═══════════════════════════════════════════════════
@@ -372,11 +377,12 @@ button[data-testid="stTooltipHoverTarget"]:hover svg,
 ═══════════════════════════════════════════════════ */
 [data-testid="stDataFrame"] [role="columnheader"],
 [data-testid="stDataEditorGrid"] [role="columnheader"] {
-    background-color: #F3F7F4 !important;
-    color:            #5C9291 !important;
-    font-weight:      600     !important;
+    background-color: #DFEAE3 !important;
+    color:            #33625A !important;
+    font-weight:      700     !important;
     font-size:        11px    !important;
     letter-spacing:   .07em   !important;
+    text-align:       center  !important;
 }
 
 /* ═══════════════════════════════════════════════════
@@ -385,14 +391,30 @@ button[data-testid="stTooltipHoverTarget"]:hover svg,
 ═══════════════════════════════════════════════════ */
 .sc-table { width:100%; border-collapse:collapse; font-size:13px; }
 .sc-table th {
-    background:#F3F7F4; color:#5C9291; font-weight:600; font-size:11px;
+    background:#DFEAE3; color:#33625A; font-weight:700; font-size:11px;
     text-transform:uppercase; letter-spacing:.07em; padding:8px 12px;
-    border-bottom:2px solid #DAEBE5; text-align:left;
+    border-bottom:2px solid #DAEBE5; text-align:center;
 }
 .sc-table td { padding:9px 12px; border-bottom:1px solid #DAEBE5; color:#314858; }
 .sc-table tr:last-child td { border-bottom:none; }
 .sc-table tr:hover td { background:#F9FDFC; }
 .sc-table .num-col { text-align:right !important; font-variant-numeric:tabular-nums; }
+.sc-table th.num-col { text-align:center !important; }
+
+/* ═══════════════════════════════════════════════════
+   インフォボックス — 案内文・注記系で共通使用
+═══════════════════════════════════════════════════ */
+.mmm-info-box {
+    background:    #E8F3EC;
+    border-left:   3px solid #7EBEAB;
+    border-radius: 6px;
+    padding:       12px 16px;
+    color:         #315E6D;
+    font-size:     14px;
+    line-height:   1.75;
+    margin-bottom: 16px;
+}
+.mmm-info-box strong { font-weight: 700; }
 
 /* ═══════════════════════════════════════════════════
    カードUI — KPI・サマリー系で共通使用（summary.py基準）
