@@ -144,6 +144,59 @@ else:
     cv_cls  = 'kpi-up'    if _cv_lift   >= 0 else ''
     cvb_cls = 'kpi-amber' if _cv_lift_b >  0 else ''
 
+    # ── 判定文 ───────────────────────────────────────────────────────────
+    _sat_candidates = {
+        ch: v for ch, v in channels.items()
+        if not v.get('is_zero', False) and v.get('saturation_label') in ('伸び代あり', '適正域')
+    }
+    _top_candidate = (
+        max(_sat_candidates.items(), key=lambda kv: kv[1].get('roi', 0))
+        if _sat_candidates else None
+    )
+
+    def _accent(text):
+        return f'<span style="color:#CB8013;font-weight:700;font-size:1.15rem;">{text}</span>'
+
+    if _top_candidate and _cv_lift >= 3:
+        _v_ch, _v_data = _top_candidate
+        _verdict_html = (
+            f'<strong>{_accent(_v_ch)}への配分を増やすと、同じ予算でCVを増やせる見込みです。</strong>'
+            f' ROI {_v_data.get("roi", 0):.2f}、まだ伸び代があります。'
+        )
+    elif _top_candidate:
+        _v_ch, _v_data = _top_candidate
+        _verdict_html = (
+            '<strong>現在の予算配分はすでに効率的です。</strong>'
+            f' 増額するなら{_accent(_v_ch)}が第一候補です（ROI {_v_data.get("roi", 0):.2f}）。'
+        )
+    else:
+        _verdict_html = (
+            '<strong>全チャネルが飽和域にあります。</strong>'
+            ' 現状維持か、予算削減の検討が妥当です。'
+        )
+
+    st.markdown(
+        f'<div style="font-size:1.05rem;line-height:1.8;margin:4px 0 18px;">{_verdict_html}</div>',
+        unsafe_allow_html=True,
+    )
+
+    _action_bullets = []
+    if _top_candidate:
+        _v_ch, _v_data = _top_candidate
+        _action_bullets.append(
+            f'{_v_ch}は{_v_data.get("saturation_label", "")}（ROI {_v_data.get("roi", 0):.2f}）で、配分を増やす候補です。'
+        )
+    _sat_chs_top = [ch for ch, v in channels.items()
+                     if not v.get('is_zero', False) and v.get('saturation_label') == '飽和域']
+    if _sat_chs_top:
+        _action_bullets.append('飽和域のチャネル: ' + '、'.join(_sat_chs_top) + '。追加投資の効果は低下しています。')
+    _zero_chs_top = [ch for ch, v in channels.items() if v.get('is_zero', False)]
+    if _zero_chs_top:
+        _action_bullets.append('効果を検出できなかったチャネル: ' + '、'.join(_zero_chs_top) + '。マッピングの見直しを推奨します。')
+
+    if _action_bullets:
+        st.markdown('\n'.join(f'- {b}' for b in _action_bullets))
+
     # ── KPI ストリップ（ホバーツールチップ付き）──────────────────────────
     st.markdown("""<style>
     .kpi-row{display:flex;gap:1px;background:#C5DFD9;border-radius:10px;overflow:visible;margin-bottom:24px;}
