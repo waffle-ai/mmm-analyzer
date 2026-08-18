@@ -94,6 +94,24 @@ if status['status'] == 'running':
             pct, label = p, lbl
             break
     prog_ph.progress(pct, text=label)
+
+    # ── 工程チェックリスト ─────────────────────────────────────────────
+    _STAGES = [
+        ('データを読み込む', 5, 13),
+        ('前処理・ベースライン分解', 17, 28),
+        ('モデルを訓練する（最も時間がかかります）', 32, 75),
+        ('予算配分を最適化する', 80, 90),
+        ('レポートを生成する', 95, 100),
+    ]
+    for _name, _lo, _hi in _STAGES:
+        if pct > _hi:
+            st.markdown(f'完了　~~{_name}~~')
+        elif pct >= _lo:
+            st.markdown(f'**実行中　{_name}**')
+            st.caption(label)
+        else:
+            st.markdown(f'未着手　{_name}')
+
     time.sleep(3)
     st.rerun()
 
