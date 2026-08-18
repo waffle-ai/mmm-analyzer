@@ -195,7 +195,7 @@ st.divider()
 # ── 円グラフ（現状 vs 最適）───────────────────────────────────────────────
 ch_order = valid_df['チャネル'].tolist()
 
-def _grad_n(n, c0='#A2CEBF', c1='#113311'):
+def _grad_n(n, c0=_COL_PRIMARY, c1=_COL_LIGHT):
     if n == 1: return [c1]
     r0,g0,b0 = int(c0[1:3],16),int(c0[3:5],16),int(c0[5:7],16)
     r1,g1,b1 = int(c1[1:3],16),int(c1[3:5],16),int(c1[5:7],16)

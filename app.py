@@ -335,6 +335,10 @@ button[data-testid="stTooltipHoverTarget"]:hover svg,
     font-weight:      700     !important;
     transition:       background-color .15s;
 }
+.stButton > button[kind="primary"] p,
+.stFormSubmitButton > button[kind="primary"] p {
+    font-weight: 700 !important;
+}
 .stButton > button[kind="primary"]:hover,
 .stFormSubmitButton > button[kind="primary"]:hover {
     background-color: #2A5160 !important;
@@ -472,6 +476,42 @@ div[data-testid="stTextInputRootElement"] input:disabled {
 [data-testid="stMainBlockContainer"] h1:first-of-type {
     margin-top: 0 !important;
     padding-top: 0 !important;
+}
+
+/* ═══════════════════════════════════════════════════
+   グラフ描画アニメーション — 棒/線/ドーナツ共通演出
+═══════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: no-preference) {
+    .js-plotly-plot .bars .point path {
+        animation: mmm-bar-grow .7s cubic-bezier(.25,.8,.35,1) both;
+    }
+    @keyframes mmm-bar-grow {
+        from { clip-path: inset(0 0 100% 0); }
+        to   { clip-path: inset(0 0 0% 0); }
+    }
+
+    .js-plotly-plot .scatterlayer .lines {
+        animation: mmm-line-draw .9s ease-out both;
+    }
+    @keyframes mmm-line-draw {
+        from { clip-path: inset(0 100% 0 0); }
+        to   { clip-path: inset(0 0% 0 0); }
+    }
+
+    @property --mmm-donut-p {
+        syntax: '<number>';
+        inherits: false;
+        initial-value: 0;
+    }
+    .js-plotly-plot .pielayer {
+        animation: mmm-donut-sweep .9s ease-out both;
+        -webkit-mask-image: conic-gradient(from 0deg, #000 calc(var(--mmm-donut-p)*3.6deg), transparent calc(var(--mmm-donut-p)*3.6deg));
+        mask-image: conic-gradient(from 0deg, #000 calc(var(--mmm-donut-p)*3.6deg), transparent calc(var(--mmm-donut-p)*3.6deg));
+    }
+    @keyframes mmm-donut-sweep {
+        from { --mmm-donut-p: 0; }
+        to   { --mmm-donut-p: 100; }
+    }
 }
 
 </style>

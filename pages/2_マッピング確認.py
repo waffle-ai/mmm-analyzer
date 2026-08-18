@@ -125,7 +125,7 @@ if True:  # 以前のタブを廃止し直接レンダリング
         .mp-hdr{display:grid;grid-template-columns:2fr 2fr 1.4fr 0.6fr;
                 gap:0 12px;padding:8px 12px 6px;
                 background:#DFEAE3;border-bottom:2px solid #DAEBE5;margin-bottom:10px;}
-        .mp-hdr span{font-size:11px;font-weight:700;color:#33625A;
+        .mp-hdr > span{font-size:11px;font-weight:700;color:#33625A;
                      text-transform:uppercase;letter-spacing:.07em;text-align:center;}
         </style>""", unsafe_allow_html=True)
         st.markdown(
