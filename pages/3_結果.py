@@ -264,31 +264,36 @@ else:
         )
 
         if _is_monetary:
-            # ── ROAS/ROI バー（monetary mode のみ） ──────────────────────
-            # monetary: roi*100 を % として表示
-            roi_pct_df = valid_df.copy()
-            roi_pct_df['ROAS/ROI (%)'] = (roi_pct_df['ROI'] * 100).round(1)
-            roi_sorted = roi_pct_df.sort_values('ROAS/ROI (%)')
-            st.subheader(f'媒体別 {_eff_label}')
+            # ── 貢献CV数バー（monetary mode）── D1推奨媒体をハイライト ──────
+            cv_sorted_m = valid_df[valid_df['貢献CV数'] > 0].sort_values('貢献CV数')
+            _highlight_ch = _top_candidate[0] if _top_candidate else None
+            _cv_bar_colors_m = [
+                '#CB8013' if ch == _highlight_ch else '#317680'
+                for ch in cv_sorted_m['媒体']
+            ]
+            st.subheader('媒体別 貢献CV数')
             fig_roi = px.bar(
-                roi_sorted, x='ROAS/ROI (%)', y='媒体', orientation='h',
-                color='ROAS/ROI (%)',
-                color_continuous_scale=[[0, '#A2CEBF'], [0.5, '#5C9291'], [1.0, '#315E6D']],
-                text='ROAS/ROI (%)',
-                labels={'ROAS/ROI (%)': f'{_eff_label}（%）'},
+                cv_sorted_m, x='貢献CV数', y='媒体', orientation='h',
+                text='貢献CV数',
+                labels={'貢献CV数': '貢献CV数（件）'},
             )
-            fig_roi.update_traces(texttemplate='%{text:.1f}%', textposition='outside', textfont_size=12)
+            fig_roi.update_traces(
+                marker_color=_cv_bar_colors_m,
+                texttemplate='%{text:.0f}件', textposition='outside', textfont_size=12,
+            )
             fig_roi.update_layout(
-                coloraxis_showscale=False,
                 margin=dict(l=10, r=80, t=10, b=10),
-                height=max(320, len(roi_sorted) * 58),
+                height=max(320, len(cv_sorted_m) * 58),
                 plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
             )
             fig_roi.update_xaxes(gridcolor='#DAEBE5', gridwidth=1)
             fig_roi.update_yaxes(gridcolor='rgba(0,0,0,0)')
             st.plotly_chart(fig_roi, use_container_width=True)
-            _top_roi_ch = roi_sorted.iloc[-1]['媒体']
-            st.caption(f'{_eff_label}が最も高いのは【{_top_roi_ch}】です。')
+            _top_roi_ch = valid_df.sort_values('ROI', ascending=False).iloc[0]['媒体']
+            st.caption(
+                f'{_eff_label}が最も高いのは【{_top_roi_ch}】です。'
+                'ただし投資額を増やすと効率は下がるため、推奨は上部の判定文を参照してください。'
+            )
 
         # ── CPA バー ────────────────────────────────────────────────────
         # count mode: 主指標として先頭表示 / monetary mode: 補足として表示
@@ -317,23 +322,31 @@ else:
             st.plotly_chart(fig_cpa, use_container_width=True)
             if not _is_monetary:
                 _top_cpa_ch = cpa_sorted.iloc[-1]['媒体']
-                st.caption(f'CPAが最も低いのは【{_top_cpa_ch}】です。')
+                st.caption(
+                    f'CPAが最も低いのは【{_top_cpa_ch}】です。'
+                    'ただし投資額を増やすと効率は下がるため、推奨は上部の判定文を参照してください。'
+                )
 
-        # ── 貢献CV数バー（count mode のみ） ─────────────────────────────
+        # ── 貢献CV数バー（count mode のみ）── D1推奨媒体をハイライト ─────
         if not _is_monetary and valid_df['貢献CV数'].sum() > 0:
             st.subheader('媒体別 貢献CV数')
             st.caption('分析期間中に各媒体が起因したCV件数の推定値です。')
             cv_sorted = valid_df[valid_df['貢献CV数'] > 0].sort_values('貢献CV数')
+            _highlight_ch = _top_candidate[0] if _top_candidate else None
+            _cv_bar_colors = [
+                '#CB8013' if ch == _highlight_ch else '#317680'
+                for ch in cv_sorted['媒体']
+            ]
             fig_cv = px.bar(
                 cv_sorted, x='貢献CV数', y='媒体', orientation='h',
-                color='貢献CV数',
-                color_continuous_scale=[[0, '#A2CEBF'], [0.5, '#5C9291'], [1.0, '#315E6D']],
                 text='貢献CV数',
                 labels={'貢献CV数': '貢献CV数（件）'},
             )
-            fig_cv.update_traces(texttemplate='%{text:.0f}件', textposition='outside', textfont_size=11)
+            fig_cv.update_traces(
+                marker_color=_cv_bar_colors,
+                texttemplate='%{text:.0f}件', textposition='outside', textfont_size=11,
+            )
             fig_cv.update_layout(
-                coloraxis_showscale=False,
                 margin=dict(l=10, r=80, t=10, b=10),
                 height=max(280, len(cv_sorted) * 52),
                 plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
