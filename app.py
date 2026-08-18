@@ -99,6 +99,18 @@ if _PASSWORD and not st.session_state.get('_authenticated', False):
         box-shadow:   0 0 0 3px rgba(49,94,109,.10) !important;
     }
     div[data-baseweb="input"] input { color:#314858 !important; font-size:14px !important; height:42px !important; }
+    /* Streamlit新バージョン(React Aria方式DOM)向けフォールバック — 本番と開発でStreamlitバージョンが
+       異なる場合でもログイン枠線が消えないようにする */
+    div[data-testid="stTextInputRootElement"] {
+        background:   #FFFFFF             !important;
+        border:       1.5px solid #5C9291 !important;
+        border-radius:4px                 !important;
+    }
+    div[data-testid="stTextInputRootElement"]:focus-within {
+        border-color: #315E6D                       !important;
+        box-shadow:   0 0 0 3px rgba(49,94,109,.10) !important;
+    }
+    div[data-testid="stTextInputRootElement"] input { color:#314858 !important; font-size:14px !important; }
     .stButton > button, .stFormSubmitButton > button {
         background-color:#315E6D !important; border:none !important; border-radius:4px !important;
         color:#FFFFFF !important; font-size:14px !important; font-weight:600 !important;
@@ -366,7 +378,8 @@ button[data-testid="stTooltipHoverTarget"]:hover svg,
 }
 
 /* 無効化されたテキスト入力（マッピング確認：元の列名）— 視認性確保 */
-div[data-baseweb="input"] input:disabled {
+div[data-baseweb="input"] input:disabled,
+div[data-testid="stTextInputRootElement"] input:disabled {
     color:                 #314858 !important;
     -webkit-text-fill-color: #314858 !important;
     opacity:               1        !important;
