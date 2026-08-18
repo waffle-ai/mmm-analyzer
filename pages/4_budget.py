@@ -20,14 +20,7 @@ _COL_MID     = '#5C9291'
 _COL_LIGHT   = '#A2CEBF'
 
 st.title('予算配分')
-st.markdown("""
-<div style="background:#EAF4F0;border-left:4px solid #315E6D;border-radius:0 8px 8px 0;
-     padding:12px 16px;margin-bottom:20px;">
-  <span style="color:#314858;font-size:15px;">
-    現在の予算配分をROI比例に最適化した場合のCV改善量と、
-    チャネルごとの増減額（Before/After）が分かります。
-  </span>
-</div>""", unsafe_allow_html=True)
+st.caption('現在の予算配分をROI比例に最適化した場合のCV改善量と、チャネルごとの増減額（Before/After）が分かります。')
 
 if not st.session_state.get('job_info'):
     _recovered = r.find_latest_job()

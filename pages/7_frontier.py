@@ -30,14 +30,7 @@ _SAT_COLORS = {
 }
 
 st.title('投資上限分析')
-st.markdown("""
-<div style="background:#EAF4F0;border-left:4px solid #315E6D;border-radius:0 8px 8px 0;
-     padding:12px 16px;margin-bottom:20px;">
-  <span style="color:#314858;font-size:15px;">
-    各チャネルの広告費が「効果の出るゾーン」にあるか「飽和域（費用対効果が低下するゾーン）」
-    にあるかを可視化します。これ以上増額しても効果が薄くなる「投資上限」の目安が分かります。
-  </span>
-</div>""", unsafe_allow_html=True)
+st.caption('各チャネルの広告費が「効果の出るゾーン」にあるか「飽和域（費用対効果が低下するゾーン）」にあるかを可視化します。これ以上増額しても効果が薄くなる「投資上限」の目安が分かります。')
 
 if not st.session_state.get('job_info'):
     _recovered = r.find_latest_job()

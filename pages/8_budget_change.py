@@ -20,14 +20,7 @@ _COL_AMBER   = '#CB8013'
 _MTERIA      = ['#315E6D', '#7EBEAB', '#5C9291', '#317680', '#A2CEBF', '#CB8013', '#C5DFD9']
 
 st.title('予算増額・減額分析')
-st.markdown("""
-<div style="background:#EAF4F0;border-left:4px solid #315E6D;border-radius:0 8px 8px 0;
-     padding:12px 16px;margin-bottom:20px;">
-  <span style="color:#314858;font-size:15px;">
-    総広告費を±30%の範囲で増減したときの成果変化を試算します。
-    各シナリオの費用対効果を見比べ、予算規模の判断に使えます。
-  </span>
-</div>""", unsafe_allow_html=True)
+st.caption('総広告費を±30%の範囲で増減したときの成果変化を試算します。各シナリオの費用対効果を見比べ、予算規模の判断に使えます。')
 
 if not st.session_state.get('job_info'):
     _recovered = r.find_latest_job()

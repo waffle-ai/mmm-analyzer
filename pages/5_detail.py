@@ -30,14 +30,7 @@ _SAT_COLORS = {
 }
 
 st.title('チャネル詳細')
-st.markdown("""
-<div style="background:#EAF4F0;border-left:4px solid #315E6D;border-radius:0 8px 8px 0;
-     padding:12px 16px;margin-bottom:20px;">
-  <span style="color:#314858;font-size:15px;">
-    チャネルごとの飽和曲線（どこで効果が頭打ちになるか）と、
-    広告効果の持続期間（アドストック半減期）が視覚的に分かります。
-  </span>
-</div>""", unsafe_allow_html=True)
+st.caption('チャネルごとの飽和曲線（どこで効果が頭打ちになるか）と、広告効果の持続期間（アドストック半減期）が視覚的に分かります。')
 
 if not st.session_state.get('job_info'):
     _recovered = r.find_latest_job()

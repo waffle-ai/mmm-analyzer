@@ -19,14 +19,7 @@ _COL_LIGHT   = '#A2CEBF'
 _COL_AMBER   = '#CB8013'
 
 st.title('モデル精度')
-st.markdown("""
-<div style="background:#EAF4F0;border-left:4px solid #315E6D;border-radius:0 8px 8px 0;
-     padding:12px 16px;margin-bottom:20px;">
-  <span style="color:#314858;font-size:15px;">
-    MMMモデルが実績値をどれだけ正確に再現しているか確認できます。
-    精度グレードと各指標から、分析結果の信頼性を判断してください。
-  </span>
-</div>""", unsafe_allow_html=True)
+st.caption('MMMモデルが実績値をどれだけ正確に再現しているか確認できます。精度グレードと各指標から、分析結果の信頼性を判断してください。')
 
 if not st.session_state.get('job_info'):
     _recovered = r.find_latest_job()

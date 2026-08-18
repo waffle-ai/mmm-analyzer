@@ -14,14 +14,7 @@ _COL_GREEN   = '#7EBEAB'
 _COL_AMBER   = '#CB8013'
 
 st.title('分析サマリ')
-st.markdown("""
-<div style="background:#EAF4F0;border-left:4px solid #315E6D;border-radius:0 8px 8px 0;
-     padding:12px 16px;margin-bottom:20px;">
-  <span style="color:#314858;font-size:15px;">
-    モデルの精度グレード・主要KPI・推奨アクションを一覧できます。
-    各詳細ページへのリンクからさらに深掘りできます。
-  </span>
-</div>""", unsafe_allow_html=True)
+st.caption('モデルの精度グレード・主要KPI・推奨アクションを一覧できます。各詳細ページへのリンクからさらに深掘りできます。')
 
 if not st.session_state.get('job_info'):
     _recovered = r.find_latest_job()

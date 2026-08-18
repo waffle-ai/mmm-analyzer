@@ -28,14 +28,7 @@ _SAT_COLORS = {
 }
 
 st.title('ROI分析')
-st.markdown("""
-<div style="background:#EAF4F0;border-left:4px solid #315E6D;border-radius:0 8px 8px 0;
-     padding:12px 16px;margin-bottom:20px;">
-  <span style="color:#314858;font-size:15px;">
-    各チャネルの費用対効果（ROI・CPA・限界ROI）を横断比較し、
-    どこに投資すれば最も効率良くCVを増やせるかが分かります。
-  </span>
-</div>""", unsafe_allow_html=True)
+st.caption('各チャネルの費用対効果（ROI・CPA・限界ROI）を横断比較し、どこに投資すれば最も効率良くCVを増やせるかが分かります。')
 
 if not st.session_state.get('job_info'):
     _recovered = r.find_latest_job()
