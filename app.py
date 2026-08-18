@@ -86,7 +86,7 @@ if _PASSWORD and not st.session_state.get('_authenticated', False):
     [data-testid="stForm"] { border:none !important; background:transparent !important; padding:0 !important; }
     div[data-baseweb="input"] {
         background:   #FFFFFF             !important;
-        border:       1.5px solid #A2CEBF !important;
+        border:       1.5px solid #5C9291 !important;
         border-radius:4px                 !important;
     }
     div[data-baseweb="input"] > div,
@@ -363,6 +363,13 @@ button[data-testid="stTooltipHoverTarget"]:hover svg,
     font-weight:      600     !important;
     font-size:        12px    !important;
     letter-spacing:   .04em   !important;
+}
+
+/* 無効化されたテキスト入力（マッピング確認：元の列名）— 視認性確保 */
+div[data-baseweb="input"] input:disabled {
+    color:                 #314858 !important;
+    -webkit-text-fill-color: #314858 !important;
+    opacity:               1        !important;
 }
 
 /* data_editor ヘッダーの help「?」を常時表示 */
