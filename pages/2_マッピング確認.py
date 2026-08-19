@@ -25,6 +25,11 @@ detect_result = st.session_state['detect_result']
 mapping       = detect_result['mapping']
 excel_path    = st.session_state['excel_tmp_path']
 client_name   = st.session_state['client_name']
+_current_source = 'demo' if _is_demo else excel_path
+_has_prior_result = (
+    st.session_state.get('job_info') is not None
+    and st.session_state.get('analyzed_source') == _current_source
+)
 
 
 @st.cache_data(show_spinner=False)
@@ -49,6 +54,12 @@ st.markdown(
     f'　｜　**{detect_result["n_rows"]}行**'
     f'　｜　**頻度**　{detect_result["freq_guess"]}'
 )
+
+if _has_prior_result:
+    st.caption(
+        '前回分析したデータが読み込まれています。'
+        '前回の分析結果を見る場合は、サイドメニューの「分析結果」から確認できます。'
+    )
 
 st.divider()
 
@@ -259,13 +270,18 @@ if True:  # 以前のタブを廃止し直接レンダリング
     if not _is_demo and st.session_state.get('job_info'):
         _job_running = runner.get_job_status(st.session_state['job_info'])['status'] == 'running'
 
-    # 同じデータ・同じマッピングで分析済みなら「結果を見る」に切り替える
-    _current_source = 'demo' if _is_demo else excel_path
+    # 同じデータ・同じマッピング・同じ分析設定で分析済みなら「結果を見る」に切り替える
+    _current_settings = {
+        'n_trials':        int(n_trials),
+        'report_type':     report_type_val,
+        'budget_increase': budget_increase,
+    }
     _already_analyzed = (
         not _job_running
         and st.session_state.get('job_info') is not None
         and st.session_state.get('analyzed_source') == _current_source
         and st.session_state.get('mapping_override') == mapping_override
+        and st.session_state.get('analyzed_settings') == _current_settings
     )
 
     if _job_running:
@@ -288,12 +304,12 @@ if True:  # 以前のタブを廃止し直接レンダリング
 
     # ── 分析開始 / 結果確認ボタン ────────────────────────────────
     if _already_analyzed:
-        st.caption('前回分析したデータが読み込まれています。')
         if st.button('分析結果を見る →', type='primary'):
             st.switch_page('pages/summary.py')
     elif st.button('分析を開始する →', type='primary', disabled=_start_disabled):
-        st.session_state['mapping_override'] = mapping_override
-        st.session_state['analyzed_source']  = _current_source
+        st.session_state['mapping_override']  = mapping_override
+        st.session_state['analyzed_source']   = _current_source
+        st.session_state['analyzed_settings'] = _current_settings
 
         if _is_demo:
             import time

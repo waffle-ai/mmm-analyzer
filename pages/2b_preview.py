@@ -47,7 +47,10 @@ _already_analyzed = (
 )
 
 if _already_analyzed:
-    st.caption('前回分析したデータが読み込まれています。')
+    st.caption(
+        '前回分析したデータが読み込まれています。'
+        '前回の分析結果を見る場合は、サイドメニューの「分析結果」から確認できます。'
+    )
     if st.button('分析結果を見る →', type='primary'):
         st.switch_page('pages/summary.py')
 elif st.button('分析を開始する →', type='primary'):
