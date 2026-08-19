@@ -8,6 +8,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 try:
     from PIL import Image as _PIL
@@ -410,7 +411,6 @@ button[data-testid="stTooltipHoverTarget"]:hover svg,
 ═══════════════════════════════════════════════════ */
 .mmm-info-box {
     background:    #E8F3EC;
-    border-left:   3px solid #7EBEAB;
     border-radius: 6px;
     padding:       12px 16px;
     color:         #315E6D;
@@ -424,7 +424,7 @@ button[data-testid="stTooltipHoverTarget"]:hover svg,
    カードUI — KPI・サマリー系で共通使用（summary.py基準）
 ═══════════════════════════════════════════════════ */
 .mmm-card-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; }
-.mmm-card { background:#fff; border-radius:8px; padding:11px 14px; box-shadow:0 1px 3px rgba(49,72,88,.08); }
+.mmm-card { background:#fff; border-radius:8px; padding:11px 14px; box-shadow:0 0 12px rgba(49,72,88,.14); }
 .mmm-card-lbl {
     color:#5C9291; font-size:10px; text-transform:uppercase; letter-spacing:.08em;
     margin-bottom:3px; display:flex; align-items:center; gap:5px;
@@ -448,11 +448,11 @@ button[data-testid="stTooltipHoverTarget"]:hover svg,
     margin:         0       !important;
 }
 
-/* 無効化されたテキスト入力（マッピング確認：元の列名）— 視認性確保 */
+/* 無効化されたテキスト入力（マッピング確認：元の列名）— 変更不可であることが伝わる淡色に統一 */
 div[data-baseweb="input"] input:disabled,
 div[data-testid="stTextInputRootElement"] input:disabled {
-    color:                 #314858 !important;
-    -webkit-text-fill-color: #314858 !important;
+    color:                 #9AA3AA !important;
+    -webkit-text-fill-color: #9AA3AA !important;
     opacity:               1        !important;
 }
 
@@ -480,18 +480,49 @@ div[data-testid="stTextInputRootElement"] input:disabled {
 
 /* ═══════════════════════════════════════════════════
    グラフ描画アニメーション — 棒/線/ドーナツ共通演出
+   画面内に入るまでは初期フレーム（非表示）で待機し、
+   JS側（IntersectionObserver）が .mmm-in-view を付与した時点で再生する。
+   縦棒=mmm-vert-bar（下→上）／横棒=mmm-horiz-bar（左→右）はJS側で判定して付与。
 ═══════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: no-preference) {
-    .js-plotly-plot .bars .point path {
-        animation: mmm-bar-grow .7s cubic-bezier(.25,.8,.35,1) both;
+    .js-plotly-plot .bars .point path,
+    .js-plotly-plot .scatterlayer .lines,
+    .js-plotly-plot .pielayer {
+        animation-play-state: paused;
     }
-    @keyframes mmm-bar-grow {
+    .js-plotly-plot.mmm-in-view .bars .point path,
+    .js-plotly-plot.mmm-in-view .scatterlayer .lines,
+    .js-plotly-plot.mmm-in-view .pielayer {
+        animation-play-state: running;
+    }
+
+    .js-plotly-plot.mmm-vert-bar .bars .point path {
+        animation-name: mmm-bar-grow-v;
+        animation-duration: .7s;
+        animation-timing-function: cubic-bezier(.25,.8,.35,1);
+        animation-fill-mode: forwards;
+    }
+    @keyframes mmm-bar-grow-v {
         from { clip-path: inset(0 0 100% 0); }
         to   { clip-path: inset(0 0 0% 0); }
     }
 
+    .js-plotly-plot.mmm-horiz-bar .bars .point path {
+        animation-name: mmm-bar-grow-h;
+        animation-duration: .7s;
+        animation-timing-function: cubic-bezier(.25,.8,.35,1);
+        animation-fill-mode: forwards;
+    }
+    @keyframes mmm-bar-grow-h {
+        from { clip-path: inset(0 100% 0 0); }
+        to   { clip-path: inset(0 0% 0 0); }
+    }
+
     .js-plotly-plot .scatterlayer .lines {
-        animation: mmm-line-draw .9s ease-out both;
+        animation-name: mmm-line-draw;
+        animation-duration: .9s;
+        animation-timing-function: ease-out;
+        animation-fill-mode: forwards;
     }
     @keyframes mmm-line-draw {
         from { clip-path: inset(0 100% 0 0); }
@@ -504,7 +535,10 @@ div[data-testid="stTextInputRootElement"] input:disabled {
         initial-value: 0;
     }
     .js-plotly-plot .pielayer {
-        animation: mmm-donut-sweep .9s ease-out both;
+        animation-name: mmm-donut-sweep;
+        animation-duration: .9s;
+        animation-timing-function: ease-out;
+        animation-fill-mode: forwards;
         -webkit-mask-image: conic-gradient(from 0deg, #000 calc(var(--mmm-donut-p)*3.6deg), transparent calc(var(--mmm-donut-p)*3.6deg));
         mask-image: conic-gradient(from 0deg, #000 calc(var(--mmm-donut-p)*3.6deg), transparent calc(var(--mmm-donut-p)*3.6deg));
     }
@@ -516,6 +550,58 @@ div[data-testid="stTextInputRootElement"] input:disabled {
 
 </style>
 """, unsafe_allow_html=True)
+
+# ── グラフ描画アニメーション制御 ────────────────────────────────────────────
+# Plotlyチャートの向き(縦棒/横棒)判定と、画面内に入った瞬間のアニメーション開始をJSで制御。
+# st.markdown内の<script>はブラウザで実行されないため、components.htmlのiframe経由で
+# window.parent.document（同一オリジン）にアクセスして親ページのDOMを監視する。
+components.html("""
+<script>
+(function() {
+    function setupOnce(doc) {
+        if (doc.__mmmChartObsInit) return;
+        doc.__mmmChartObsInit = true;
+
+        var io = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('mmm-in-view');
+                    io.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.2 });
+
+        function markOrientation(plot) {
+            try {
+                var data = plot.data;
+                if (!data) return;
+                var hasBar = data.some(function(d) { return d.type === 'bar'; });
+                if (hasBar) {
+                    var horiz = data.some(function(d) { return d.orientation === 'h'; });
+                    plot.classList.add(horiz ? 'mmm-horiz-bar' : 'mmm-vert-bar');
+                }
+            } catch (e) { /* noop */ }
+        }
+
+        function scan() {
+            doc.querySelectorAll('.js-plotly-plot:not([data-mmm-scanned])').forEach(function(plot) {
+                plot.setAttribute('data-mmm-scanned', '1');
+                markOrientation(plot);
+                io.observe(plot);
+            });
+        }
+
+        scan();
+        var mo = new MutationObserver(function() { scan(); });
+        mo.observe(doc.body, { childList: true, subtree: true });
+    }
+
+    try {
+        setupOnce(window.parent.document);
+    } catch (e) { /* 異なるオリジン等で失敗した場合は何もしない */ }
+})();
+</script>
+""", height=0)
 
 # ── ナビゲーション ────────────────────────────────────────────────────────
 # ── サイドバーフッター（ロゴ）: pg.run() より前に配置しないと st.stop() で消える ──
