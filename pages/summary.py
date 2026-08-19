@@ -22,7 +22,7 @@ st.title('分析サマリ')
 st.markdown('<p class="page-lede">モデルの精度グレード・主要KPI・推奨アクションを一覧できます。各詳細ページへのリンクからさらに深掘りできます。</p>', unsafe_allow_html=True)
 
 if not st.session_state.get('job_info'):
-    _recovered = r.find_latest_job()
+    _recovered = r.find_latest_job(st.session_state.get('own_job_ids', set()))
     if _recovered:
         st.session_state['job_info'] = _recovered
         st.info('前回のジョブを表示しています。')
@@ -73,7 +73,7 @@ _avp_dates = (_avp.get('dates_train') or []) + (_avp.get('dates_hold') or [])
 if _avp_dates:
     _d0 = _dt.date.fromisoformat(_avp_dates[0])
     _d1 = _dt.date.fromisoformat(_avp_dates[-1])
-    _period_str = f'{_d0.year}年{_d0.month}月〜{_d1.year}年{_d1.month}月'
+    _period_str = f'{_d0.year}年{_d0.month}月<br>〜{_d1.year}年{_d1.month}月'
 else:
     _period_str = None
 
@@ -226,48 +226,42 @@ st.markdown(f"""
       </div>
     </div>
   </div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:18px;">
-    {f'''<div style="background:#fff;border-radius:8px;padding:11px 14px;box-shadow:0 1px 3px rgba(49,72,88,.08);">
-      <div style="color:#5C9291;font-size:10px;text-transform:uppercase;
-           letter-spacing:.08em;margin-bottom:3px;">分析期間</div>
-      <div style="font-size:16px;font-weight:700;color:#314858;line-height:1.4;">{_period_str}</div>
+  <div class="mmm-card-grid" style="margin-bottom:18px;">
+    {f'''<div class="mmm-card">
+      <div class="mmm-card-lbl">分析期間</div>
+      <div class="mmm-card-val" style="font-size:16px;line-height:1.4;">{_period_str}</div>
     </div>''' if _period_str else ''}
-    <div style="background:#fff;border-radius:8px;padding:11px 14px;box-shadow:0 1px 3px rgba(49,72,88,.08);">
-      <div style="color:#5C9291;font-size:10px;text-transform:uppercase;
-           letter-spacing:.08em;margin-bottom:3px;">分析チャネル数</div>
-      <div style="font-size:20px;font-weight:700;color:#314858;">
-        {n_active_ch}<span style="font-size:12px;font-weight:400;color:#5C9291;"> ch</span>
+    <div class="mmm-card">
+      <div class="mmm-card-lbl">分析チャネル数</div>
+      <div class="mmm-card-val">
+        {n_active_ch}<span class="mmm-card-unit">ch</span>
       </div>
     </div>
-    <div style="background:#fff;border-radius:8px;padding:11px 14px;box-shadow:0 1px 3px rgba(49,72,88,.08);">
-      <div style="color:#5C9291;font-size:10px;text-transform:uppercase;
-           letter-spacing:.08em;margin-bottom:3px;">CV 実績</div>
-      <div style="font-size:20px;font-weight:700;color:#314858;">
-        {_total_cv:,}<span style="font-size:12px;font-weight:400;color:#5C9291;"> 件</span>
+    <div class="mmm-card">
+      <div class="mmm-card-lbl">CV 実績</div>
+      <div class="mmm-card-val">
+        {_total_cv:,}<span class="mmm-card-unit">件</span>
       </div>
     </div>
-    <div style="background:#fff;border-radius:8px;padding:11px 14px;box-shadow:0 1px 3px rgba(49,72,88,.08);">
-      <div style="color:#5C9291;font-size:10px;text-transform:uppercase;
-           letter-spacing:.08em;margin-bottom:3px;">分析期間の広告費合計</div>
-      <div style="font-size:20px;font-weight:700;color:#314858;">
-        {_total_spend/10000:,.0f}<span style="font-size:12px;font-weight:400;color:#5C9291;"> 万円</span>
+    <div class="mmm-card">
+      <div class="mmm-card-lbl">分析期間の広告費合計</div>
+      <div class="mmm-card-val">
+        {_total_spend/10000:,.0f}<span class="mmm-card-unit">万円</span>
       </div>
     </div>
-    <div style="background:#fff;border-radius:8px;padding:11px 14px;box-shadow:0 1px 3px rgba(49,72,88,.08);">
-      <div style="color:#5C9291;font-size:10px;text-transform:uppercase;
-           letter-spacing:.08em;margin-bottom:3px;">同予算 CV改善余地</div>
-      <div style="font-size:20px;font-weight:700;color:{_cv_lift_color};">
+    <div class="mmm-card">
+      <div class="mmm-card-lbl">同予算 CV改善余地</div>
+      <div class="mmm-card-val" style="color:{_cv_lift_color};">
         {_pct_str(_cv_lift)}
       </div>
       <div style="font-size:11px;color:#5C9291;margin-top:2px;">
         {f'+{_abs_cv_gain:,.0f}件増加の試算' if _abs_cv_gain > 0 else ''}
       </div>
     </div>
-    <div style="background:#fff;border-radius:8px;padding:11px 14px;box-shadow:0 1px 3px rgba(49,72,88,.08);">
-      <div style="color:#5C9291;font-size:10px;text-transform:uppercase;
-           letter-spacing:.08em;margin-bottom:3px;">平均{_eff_label}</div>
-      <div style="font-size:20px;font-weight:700;color:#314858;">
-        {_avg_eff_display}<span style="font-size:12px;font-weight:400;color:#5C9291;"> {_avg_eff_unit}</span>
+    <div class="mmm-card">
+      <div class="mmm-card-lbl">平均{_eff_label}</div>
+      <div class="mmm-card-val">
+        {_avg_eff_display}<span class="mmm-card-unit">{_avg_eff_unit}</span>
       </div>
     </div>
   </div>

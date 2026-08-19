@@ -31,7 +31,7 @@ st.title('ROI・CPA分析')
 st.markdown('<p class="page-lede">各チャネルの費用対効果（ROI・CPA・限界ROI）を横断比較し、どこに投資すれば最も効率良くCVを増やせるかが分かります。</p>', unsafe_allow_html=True)
 
 if not st.session_state.get('job_info'):
-    _recovered = r.find_latest_job()
+    _recovered = r.find_latest_job(st.session_state.get('own_job_ids', set()))
     if _recovered:
         st.session_state['job_info'] = _recovered
         st.info('前回のジョブを表示しています。')
@@ -119,25 +119,6 @@ else:
     _eff_label   = 'ROAS / ROI' if _is_monetary else 'CPA'
     _eff_unit    = '%' if _is_monetary else '円'
 
-    _cv_lift_style   = f'color:{_COL_PRIMARY};' if _cv_lift   >= 0 else ''
-    _cv_lift_b_style = f'color:{_COL_AMBER};'   if _cv_lift_b >  0 else ''
-
-    # ── CV改善サマリーカード ────────────────────────────────────────────
-    st.markdown(f"""<div class="mmm-card-grid" style="margin-bottom:24px;">
-      <div class="mmm-card">
-        <div class="mmm-card-lbl">CV実績<span class="lq">?<span class="lq-tip">分析期間の合計コンバージョン数（広告起因・ベースライン含む）。</span></span></div>
-        <div class="mmm-card-val">{_total_cv:,}<span class="mmm-card-unit">件</span></div>
-      </div>
-      <div class="mmm-card">
-        <div class="mmm-card-lbl">同予算 CV改善<span class="lq">?<span class="lq-tip">同じ総広告費のまま配分をROI比例に最適化した場合の推定CV増加率。</span></span></div>
-        <div class="mmm-card-val" style="{_cv_lift_style}">{_pct_str(_cv_lift)}</div>
-      </div>
-      <div class="mmm-card">
-        <div class="mmm-card-lbl">増額{int(_budget_inc*100)}% CV改善<span class="lq">?<span class="lq-tip lq-tip-left">総広告費を{int(_budget_inc*100)}%増額かつ最適配分した場合の推定CV増加率。</span></span></div>
-        <div class="mmm-card-val" style="{_cv_lift_b_style}">{_pct_str(_cv_lift_b)}</div>
-      </div>
-    </div>""", unsafe_allow_html=True)
-
     # ── チャネル DataFrame ──────────────────────────────────────────────
     if channels:
         ch_df = pd.DataFrame([
@@ -157,10 +138,6 @@ else:
         valid_df = ch_df[ch_df['有効']].drop(columns=['有効'])
 
         st.divider()
-        st.caption(
-            '飽和度: 伸び代あり=増額で効果が見込める / 適正域=現状が効率的 / '
-            '飽和域=追加投資しても伸びにくい / 係数ゼロ=効果を検出できず'
-        )
 
         if _is_monetary:
             # ── ROAS/ROI バー（monetary mode のみ） ──────────────────────

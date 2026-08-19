@@ -123,10 +123,11 @@ if True:  # 以前のタブを廃止し直接レンダリング
 
         st.markdown("""<style>
         .mp-hdr{display:grid;grid-template-columns:2fr 2fr 1.4fr 0.6fr;
-                gap:0 12px;padding:8px 12px 6px;
-                background:#C5DFD9;border-bottom:2px solid #DAEBE5;margin-bottom:10px;}
+                gap:0 4px;padding:0;
+                border-bottom:2px solid #C5DFD9;margin-bottom:10px;}
         .mp-hdr > span{font-size:11px;font-weight:700;color:#33625A;
-                     text-transform:uppercase;letter-spacing:.07em;text-align:center;}
+                     text-transform:uppercase;letter-spacing:.07em;text-align:center;
+                     background:#C5DFD9;padding:8px 12px 6px;}
         </style>""", unsafe_allow_html=True)
         st.markdown(
             '<div class="mp-hdr">'
@@ -314,6 +315,7 @@ if True:  # 以前のタブを廃止し直接レンダリング
                     budget_increase=budget_increase,
                 )
             st.session_state['job_info'] = job_info
+            st.session_state.setdefault('own_job_ids', set()).add(job_info['job_id'])
             st.switch_page('pages/summary.py')
 
 st.page_link('pages/2b_preview.py', label='データプレビューを確認する →')

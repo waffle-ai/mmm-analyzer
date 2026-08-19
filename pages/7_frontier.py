@@ -33,7 +33,7 @@ st.title('投資上限分析')
 st.markdown('<p class="page-lede">各チャネルの広告費が「効果の出るゾーン」にあるか「飽和域（費用対効果が低下するゾーン）」にあるかを可視化します。これ以上増額しても効果が薄くなる「投資上限」の目安が分かります。</p>', unsafe_allow_html=True)
 
 if not st.session_state.get('job_info'):
-    _recovered = r.find_latest_job()
+    _recovered = r.find_latest_job(st.session_state.get('own_job_ids', set()))
     if _recovered:
         st.session_state['job_info'] = _recovered
         st.info('前回のジョブを表示しています。')

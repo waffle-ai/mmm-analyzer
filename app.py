@@ -252,7 +252,7 @@ a[data-testid="stSidebarNavLink"] p {
 
 /* ─ ホバー ─ */
 a[data-testid="stSidebarNavLink"]:hover {
-    background-color: #253B4A !important;
+    background-color: rgba(126,190,171,.14) !important;
 }
 a[data-testid="stSidebarNavLink"]:hover * {
     color: #ffffff !important;
@@ -260,8 +260,7 @@ a[data-testid="stSidebarNavLink"]:hover * {
 
 /* ─ 選択中 ─ */
 a[data-testid="stSidebarNavLink"][aria-current="page"] {
-    background-color: #253B4A !important;
-    border-left:      3px solid #7EBEAB !important;
+    background-color: rgba(126,190,171,.3) !important;
     font-weight:      600 !important;
     animation:        none !important;
 }
@@ -398,9 +397,9 @@ button[data-testid="stTooltipHoverTarget"]:hover svg,
 .sc-table th {
     background:#C5DFD9; color:#33625A; font-weight:700; font-size:11px;
     text-transform:uppercase; letter-spacing:.07em; padding:8px 12px;
-    border-bottom:2px solid #DAEBE5; text-align:center;
+    border-bottom:2px solid #C5DFD9; text-align:center;
 }
-.sc-table td { padding:9px 12px; border-bottom:1px solid #DAEBE5; color:#314858; }
+.sc-table td { padding:9px 12px; border-bottom:1px solid #C5DFD9; color:#314858; }
 .sc-table tr:last-child td { border-bottom:none; }
 .sc-table tr:hover td { background:#F9FDFC; }
 .sc-table .num-col { text-align:right !important; font-variant-numeric:tabular-nums; }
@@ -424,12 +423,12 @@ button[data-testid="stTooltipHoverTarget"]:hover svg,
    カードUI — KPI・サマリー系で共通使用（summary.py基準）
 ═══════════════════════════════════════════════════ */
 .mmm-card-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; }
-.mmm-card { background:#fff; border-radius:8px; padding:11px 14px; box-shadow:0 0 12px rgba(49,72,88,.14); }
+.mmm-card { background:#fff; border-radius:8px; padding:11px 14px; box-shadow:0 0 12px rgba(49,72,88,.14); text-align:center; }
 .mmm-card-lbl {
-    color:#5C9291; font-size:10px; text-transform:uppercase; letter-spacing:.08em;
-    margin-bottom:3px; display:flex; align-items:center; gap:5px;
+    color:#5C9291; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.08em;
+    margin-bottom:3px; display:flex; align-items:center; justify-content:center; gap:5px;
 }
-.mmm-card-val { font-size:20px; font-weight:700; color:#314858; line-height:1.3; display:flex; align-items:center; gap:6px; }
+.mmm-card-val { font-size:20px; font-weight:700; color:#314858; line-height:1.3; display:flex; align-items:center; justify-content:center; gap:6px; }
 .mmm-card-unit { font-size:12px; font-weight:400; color:#5C9291; }
 
 /* KPIグレードバッジ — 精度指標・ROI系で共通使用 */
@@ -487,20 +486,23 @@ div[data-testid="stTextInputRootElement"] input:disabled {
 @media (prefers-reduced-motion: no-preference) {
     .js-plotly-plot .bars .point path,
     .js-plotly-plot .scatterlayer .lines,
-    .js-plotly-plot .pielayer {
+    .js-plotly-plot .pielayer,
+    .js-plotly-plot .errorbars {
         animation-play-state: paused;
     }
     .js-plotly-plot.mmm-in-view .bars .point path,
     .js-plotly-plot.mmm-in-view .scatterlayer .lines,
-    .js-plotly-plot.mmm-in-view .pielayer {
+    .js-plotly-plot.mmm-in-view .pielayer,
+    .js-plotly-plot.mmm-in-view .errorbars {
         animation-play-state: running;
     }
 
     .js-plotly-plot.mmm-vert-bar .bars .point path {
         animation-name: mmm-bar-grow-v;
         animation-duration: .7s;
+        animation-delay: .2s;
         animation-timing-function: cubic-bezier(.25,.8,.35,1);
-        animation-fill-mode: forwards;
+        animation-fill-mode: both;
     }
     @keyframes mmm-bar-grow-v {
         from { clip-path: inset(100% 0 0 0); }
@@ -510,8 +512,9 @@ div[data-testid="stTextInputRootElement"] input:disabled {
     .js-plotly-plot.mmm-horiz-bar .bars .point path {
         animation-name: mmm-bar-grow-h;
         animation-duration: .7s;
+        animation-delay: .2s;
         animation-timing-function: cubic-bezier(.25,.8,.35,1);
-        animation-fill-mode: forwards;
+        animation-fill-mode: both;
     }
     @keyframes mmm-bar-grow-h {
         from { clip-path: inset(0 100% 0 0); }
@@ -521,12 +524,28 @@ div[data-testid="stTextInputRootElement"] input:disabled {
     .js-plotly-plot .scatterlayer .lines {
         animation-name: mmm-line-draw;
         animation-duration: .9s;
+        animation-delay: .2s;
         animation-timing-function: ease-out;
-        animation-fill-mode: forwards;
+        animation-fill-mode: both;
     }
     @keyframes mmm-line-draw {
         from { clip-path: inset(0 100% 0 0); }
         to   { clip-path: inset(0 0% 0 0); }
+    }
+
+    /* CPA信頼区間（フォレストプロット）: ■マーカーを中心に誤差バーが左右に広がる */
+    .js-plotly-plot .errorbars {
+        animation-name: mmm-errorbar-grow;
+        animation-duration: .7s;
+        animation-delay: .2s;
+        animation-timing-function: cubic-bezier(.25,.8,.35,1);
+        animation-fill-mode: both;
+        transform-box: fill-box;
+        transform-origin: center;
+    }
+    @keyframes mmm-errorbar-grow {
+        from { transform: scaleX(0); }
+        to   { transform: scaleX(1); }
     }
 
     @property --mmm-donut-p {
@@ -537,8 +556,9 @@ div[data-testid="stTextInputRootElement"] input:disabled {
     .js-plotly-plot .pielayer {
         animation-name: mmm-donut-sweep;
         animation-duration: .9s;
+        animation-delay: .2s;
         animation-timing-function: ease-out;
-        animation-fill-mode: forwards;
+        animation-fill-mode: both;
         -webkit-mask-image: conic-gradient(from 0deg, #000 calc(var(--mmm-donut-p)*3.6deg), transparent calc(var(--mmm-donut-p)*3.6deg));
         mask-image: conic-gradient(from 0deg, #000 calc(var(--mmm-donut-p)*3.6deg), transparent calc(var(--mmm-donut-p)*3.6deg));
     }
@@ -562,11 +582,64 @@ components.html("""
         if (doc.__mmmChartObsInit) return;
         doc.__mmmChartObsInit = true;
 
+        var win = doc.defaultView || window.parent;
+        var REVEAL_DEBOUNCE_MS = 250;
+        var IDLE_STREAK_NEEDED = 3;
+        var IDLE_FRAME_MAX_MS = 50;
+        var IDLE_WAIT_CAP_MS = 4000;
+
+        function reveal(plot) {
+            if (plot.classList.contains('mmm-in-view')) return;
+            plot.classList.add('mmm-in-view');
+            if (plot.__mmmRedrawObs) {
+                plot.__mmmRedrawObs.disconnect();
+                plot.__mmmRedrawObs = null;
+            }
+        }
+
+        // ページ遷移直後はStreamlitの再描画やPlotlyの複数回の内部redrawでメインスレッドが
+        // 塞がっていることがある。その間にmmm-in-viewを付与するとCSSアニメーションのタイムラインが
+        // 裏側で進行してしまい、ブラウザが実際にペイントできる頃には完了済み(=途中から描画された
+        // ように見える)になる。そのため直近の連続フレームが正常な間隔で描画できている(=メイン
+        // スレッドが空いている)ことを確認してからmmm-in-viewを付与する。
+        function whenPaintReady(cb) {
+            var start = win.performance.now();
+            var streak = 0;
+            var last = null;
+            function frame(now) {
+                if (now - start > IDLE_WAIT_CAP_MS) { cb(); return; }
+                if (last !== null) {
+                    streak = (now - last) < IDLE_FRAME_MAX_MS ? streak + 1 : 0;
+                }
+                last = now;
+                if (streak >= IDLE_STREAK_NEEDED) { cb(); return; }
+                win.requestAnimationFrame(frame);
+            }
+            win.requestAnimationFrame(frame);
+        }
+
+        // Plotlyはコンテナ挿入後も複数回にわたり内部でpath要素を作り直す(オートサイズ確定等)。
+        // 交差直後に即座にmmm-in-viewを付与すると、その後の再描画で生成されたpathが
+        // 既にrunning状態で生まれてしまい、ブラウザが実際に描画するタイミングには
+        // アニメーションが裏側で完了済み(=途中から描画されたように見える)になる。
+        // そのため、対象プロット内のDOM変化が一定時間止まるまでmmm-in-view付与を遅延させる。
+        function armReveal(plot) {
+            if (plot.__mmmRevealTimer) clearTimeout(plot.__mmmRevealTimer);
+            plot.__mmmRevealTimer = setTimeout(function() {
+                if (plot.__mmmIntersecting) {
+                    whenPaintReady(function() {
+                        if (plot.__mmmIntersecting) reveal(plot);
+                    });
+                }
+            }, REVEAL_DEBOUNCE_MS);
+        }
+
         var io = new IntersectionObserver(function(entries) {
             entries.forEach(function(entry) {
                 if (entry.isIntersecting) {
-                    entry.target.classList.add('mmm-in-view');
+                    entry.target.__mmmIntersecting = true;
                     io.unobserve(entry.target);
+                    armReveal(entry.target);
                 }
             });
         }, { threshold: 0.2 });
@@ -583,10 +656,19 @@ components.html("""
             } catch (e) { /* noop */ }
         }
 
+        function watchRedraw(plot) {
+            var redrawObs = new MutationObserver(function() {
+                if (plot.__mmmIntersecting) armReveal(plot);
+            });
+            redrawObs.observe(plot, { childList: true, subtree: true });
+            plot.__mmmRedrawObs = redrawObs;
+        }
+
         function scan() {
             doc.querySelectorAll('.js-plotly-plot:not([data-mmm-scanned])').forEach(function(plot) {
                 plot.setAttribute('data-mmm-scanned', '1');
                 markOrientation(plot);
+                watchRedraw(plot);
                 io.observe(plot);
             });
         }

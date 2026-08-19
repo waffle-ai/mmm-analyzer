@@ -165,12 +165,18 @@ def get_job_status(job_info: dict) -> dict:
     }
 
 
-def find_latest_job() -> dict | None:
-    """output/直下の最新ジョブディレクトリからjob_infoを再構築する（セッション復帰用）。"""
-    if not OUTPUT_BASE.exists():
+def find_latest_job(allowed_job_ids: set) -> dict | None:
+    """output/直下の最新ジョブディレクトリからjob_infoを再構築する（セッション復帰用）。
+
+    allowed_job_idsは現在のセッションが自分で開始したjob_idの集合。ここに含まれる
+    ディレクトリのみを復元対象にすることで、他クライアント/他セッションが実行した
+    分析結果を誤って表示しないようにする。
+    """
+    if not allowed_job_ids or not OUTPUT_BASE.exists():
         return None
     dirs = sorted(
-        (d for d in OUTPUT_BASE.iterdir() if d.is_dir() and (d / 'run.log').exists()),
+        (d for d in OUTPUT_BASE.iterdir()
+         if d.is_dir() and d.name in allowed_job_ids and (d / 'run.log').exists()),
         key=lambda d: d.name,
         reverse=True,
     )

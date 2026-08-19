@@ -33,7 +33,7 @@ st.title('チャネル分析')
 st.markdown('<p class="page-lede">チャネルごとの飽和曲線（どこで効果が頭打ちになるか）と、広告効果の持続期間（アドストック半減期）が視覚的に分かります。</p>', unsafe_allow_html=True)
 
 if not st.session_state.get('job_info'):
-    _recovered = r.find_latest_job()
+    _recovered = r.find_latest_job(st.session_state.get('own_job_ids', set()))
     if _recovered:
         st.session_state['job_info'] = _recovered
         st.info('前回のジョブを表示しています。')

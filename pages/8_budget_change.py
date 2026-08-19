@@ -24,7 +24,7 @@ st.title('予算増額・減額分析')
 st.markdown('<p class="page-lede">総広告費を±30%の範囲で増減したときの成果変化を試算します。各シナリオの費用対効果を見比べ、予算規模の判断に使えます。</p>', unsafe_allow_html=True)
 
 if not st.session_state.get('job_info'):
-    _recovered = r.find_latest_job()
+    _recovered = r.find_latest_job(st.session_state.get('own_job_ids', set()))
     if _recovered:
         st.session_state['job_info'] = _recovered
         st.info('前回のジョブを表示しています。')

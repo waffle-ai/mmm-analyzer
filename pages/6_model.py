@@ -23,7 +23,7 @@ st.title('モデル精度')
 st.markdown('<p class="page-lede">MMMモデルが実績値をどれだけ正確に再現しているか確認できます。精度グレードと各指標から、分析結果の信頼性を判断してください。</p>', unsafe_allow_html=True)
 
 if not st.session_state.get('job_info'):
-    _recovered = r.find_latest_job()
+    _recovered = r.find_latest_job(st.session_state.get('own_job_ids', set()))
     if _recovered:
         st.session_state['job_info'] = _recovered
         st.info('前回のジョブを表示しています。')

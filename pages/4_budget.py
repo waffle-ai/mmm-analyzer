@@ -18,12 +18,13 @@ _COL_PRIMARY = '#315E6D'
 _COL_GREEN   = '#7EBEAB'
 _COL_MID     = '#5C9291'
 _COL_LIGHT   = '#A2CEBF'
+_COL_AMBER   = '#CB8013'
 
 st.title('予算配分分析')
 st.markdown('<p class="page-lede">現在の予算配分をROI比例に最適化した場合のCV改善量と、チャネルごとの増減額（Before/After）が分かります。</p>', unsafe_allow_html=True)
 
 if not st.session_state.get('job_info'):
-    _recovered = r.find_latest_job()
+    _recovered = r.find_latest_job(st.session_state.get('own_job_ids', set()))
     if _recovered:
         st.session_state['job_info'] = _recovered
         st.info('前回のジョブを表示しています。')
@@ -85,26 +86,22 @@ else:
 
 # ── サマリー指標 ────────────────────────────────────────────────────────
 st.subheader('予算最適化シミュレーション')
-b1, b2, b3 = st.columns(3)
-b1.metric('現状 CV 実績', f'{_total_cv:,}件')
-with b2:
-    st.markdown(
-        '<div class="lbl-q" style="margin-bottom:4px;">'
-        '同予算・最適配分後'
-        '<span class="lq">?<span class="lq-tip">同じ総広告費のまま配分をROI比例に最適化した場合の推定CV増加率。</span></span>'
-        '</div>',
-        unsafe_allow_html=True,
-    )
-    st.metric('同予算・最適配分後', _pct_str(_cv_lift), label_visibility='collapsed')
-with b3:
-    st.markdown(
-        f'<div class="lbl-q" style="margin-bottom:4px;">'
-        f'予算 +{int(_budget_inc*100)}% 増額後'
-        f'<span class="lq">?<span class="lq-tip lq-tip-left">総広告費を {int(_budget_inc*100)}% 増額し、かつ最適配分した場合の推定CV増加率。</span></span>'
-        f'</div>',
-        unsafe_allow_html=True,
-    )
-    st.metric(f'予算 +{int(_budget_inc*100)}% 増額後', _pct_str(_cv_lift_b), label_visibility='collapsed')
+_cv_lift_style   = f'color:{_COL_PRIMARY};' if _cv_lift   >= 0 else ''
+_cv_lift_b_style = f'color:{_COL_AMBER};'   if _cv_lift_b >  0 else ''
+st.markdown(f"""<div class="mmm-card-grid" style="margin-bottom:24px;">
+  <div class="mmm-card">
+    <div class="mmm-card-lbl">CV実績<span class="lq">?<span class="lq-tip">分析期間の合計コンバージョン数（広告起因・ベースライン含む）。</span></span></div>
+    <div class="mmm-card-val">{_total_cv:,}<span class="mmm-card-unit">件</span></div>
+  </div>
+  <div class="mmm-card">
+    <div class="mmm-card-lbl">同予算 CV改善<span class="lq">?<span class="lq-tip">同じ総広告費のまま配分をROI比例に最適化した場合の推定CV増加率。</span></span></div>
+    <div class="mmm-card-val" style="{_cv_lift_style}">{_pct_str(_cv_lift)}</div>
+  </div>
+  <div class="mmm-card">
+    <div class="mmm-card-lbl">増額{int(_budget_inc*100)}% CV改善<span class="lq">?<span class="lq-tip lq-tip-left">総広告費を{int(_budget_inc*100)}%増額かつ最適配分した場合の推定CV増加率。</span></span></div>
+    <div class="mmm-card-val" style="{_cv_lift_b_style}">{_pct_str(_cv_lift_b)}</div>
+  </div>
+</div>""", unsafe_allow_html=True)
 
 # 投資効率フロンティア情報
 if _max_eff > 0:
@@ -212,6 +209,8 @@ with col_l:
         hole=0.4,
         marker_colors=ch_colors,
         sort=False,
+        direction='clockwise',
+        rotation=0,
         textposition='inside',
         textinfo='percent+label',
     ))
@@ -226,6 +225,8 @@ with col_r:
         hole=0.4,
         marker_colors=ch_colors,
         sort=False,
+        direction='clockwise',
+        rotation=0,
         textposition='inside',
         textinfo='percent+label',
     ))
