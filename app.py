@@ -96,8 +96,8 @@ if _PASSWORD and not st.session_state.get('_authenticated', False):
         border:     none    !important;
     }
     div[data-baseweb="input"]:focus-within {
-        border-color: #315E6D                       !important;
-        box-shadow:   0 0 0 3px rgba(49,94,109,.10) !important;
+        border-color: #315E6D !important;
+        box-shadow:   none    !important;
     }
     div[data-baseweb="input"] input { color:#314858 !important; font-size:14px !important; height:42px !important; }
     /* Streamlit新バージョン(React Aria方式DOM)向けフォールバック — 本番と開発でStreamlitバージョンが
@@ -108,8 +108,8 @@ if _PASSWORD and not st.session_state.get('_authenticated', False):
         border-radius:4px                 !important;
     }
     div[data-testid="stTextInputRootElement"]:focus-within {
-        border-color: #315E6D                       !important;
-        box-shadow:   0 0 0 3px rgba(49,94,109,.10) !important;
+        border-color: #315E6D !important;
+        box-shadow:   none    !important;
     }
     div[data-testid="stTextInputRootElement"] input { color:#314858 !important; font-size:14px !important; }
     .stButton > button, .stFormSubmitButton > button {
@@ -382,7 +382,7 @@ button[data-testid="stTooltipHoverTarget"]:hover svg,
 ═══════════════════════════════════════════════════ */
 [data-testid="stDataFrame"] [role="columnheader"],
 [data-testid="stDataEditorGrid"] [role="columnheader"] {
-    background-color: #DFEAE3 !important;
+    background-color: #C5DFD9 !important;
     color:            #33625A !important;
     font-weight:      700     !important;
     font-size:        11px    !important;
@@ -396,7 +396,7 @@ button[data-testid="stTooltipHoverTarget"]:hover svg,
 ═══════════════════════════════════════════════════ */
 .sc-table { width:100%; border-collapse:collapse; font-size:13px; }
 .sc-table th {
-    background:#DFEAE3; color:#33625A; font-weight:700; font-size:11px;
+    background:#C5DFD9; color:#33625A; font-weight:700; font-size:11px;
     text-transform:uppercase; letter-spacing:.07em; padding:8px 12px;
     border-bottom:2px solid #DAEBE5; text-align:center;
 }
@@ -503,8 +503,8 @@ div[data-testid="stTextInputRootElement"] input:disabled {
         animation-fill-mode: forwards;
     }
     @keyframes mmm-bar-grow-v {
-        from { clip-path: inset(0 0 100% 0); }
-        to   { clip-path: inset(0 0 0% 0); }
+        from { clip-path: inset(100% 0 0 0); }
+        to   { clip-path: inset(0% 0 0 0); }
     }
 
     .js-plotly-plot.mmm-horiz-bar .bars .point path {
