@@ -260,7 +260,7 @@ a[data-testid="stSidebarNavLink"]:hover * {
 
 /* ─ 選択中 ─ */
 a[data-testid="stSidebarNavLink"][aria-current="page"] {
-    background-color: rgba(126,190,171,.3) !important;
+    background-color: #253B4A !important;
     font-weight:      600 !important;
     animation:        none !important;
 }

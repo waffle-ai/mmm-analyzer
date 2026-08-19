@@ -39,8 +39,18 @@ else:
 
 st.divider()
 
-# ── 分析開始 CTA ──────────────────────────────────────────────────────────
-if st.button('分析を開始する →', type='primary'):
+# ── 分析開始 / 結果確認 CTA ────────────────────────────────────────────────
+_current_source = 'demo' if _is_demo else _excel_path
+_already_analyzed = (
+    st.session_state.get('job_info') is not None
+    and st.session_state.get('analyzed_source') == _current_source
+)
+
+if _already_analyzed:
+    st.caption('前回分析したデータが読み込まれています。')
+    if st.button('分析結果を見る →', type='primary'):
+        st.switch_page('pages/summary.py')
+elif st.button('分析を開始する →', type='primary'):
     if _is_demo:
         import time
         _stages = [
@@ -63,6 +73,7 @@ if st.button('分析を開始する →', type='primary'):
                 time.sleep(_step_sleep)
             _prev = _pct
         time.sleep(0.3)
+        st.session_state['analyzed_source'] = _current_source
         st.switch_page('pages/summary.py')
     else:
         # 本番モードはマッピング設定ページへ（data_editor の設定が必要なため）

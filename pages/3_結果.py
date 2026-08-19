@@ -34,7 +34,7 @@ if not st.session_state.get('job_info'):
     _recovered = r.find_latest_job(st.session_state.get('own_job_ids', set()))
     if _recovered:
         st.session_state['job_info'] = _recovered
-        st.info('前回のジョブを表示しています。')
+        st.info('前回の分析結果を表示しています。')
     else:
         st.warning('まだ分析が開始されていません。')
         st.page_link('pages/1_アップロード.py', label='← アップロードページへ')

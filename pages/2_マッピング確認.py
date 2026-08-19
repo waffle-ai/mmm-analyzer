@@ -231,10 +231,42 @@ if True:  # 以前のタブを廃止し直接レンダリング
             f' ＝ 処理時間の目安 **{est}**（使用PCのスペックによって変動します）'
         )
 
+    # ── mapping_override を構築（デモ・通常共通。比較にも使う） ─────
+    new_channel_map: dict = {}
+    for _, row in edited.iterrows():
+        ch   = row['チャネル名']
+        role = row['役割']
+        col_name = row['列名']
+        if ch == '（未マッピング）' or role == '（未確定）':
+            continue
+        if ch not in new_channel_map:
+            new_channel_map[ch] = {'media': None, 'cost': None, 'media_score': 0, 'cost_score': 0}
+        if role == 'コスト':
+            new_channel_map[ch]['cost'] = col_name
+        elif role == 'メディア':
+            new_channel_map[ch]['media'] = col_name
+
+    mapping_override = {
+        'date_col':    date_col or mapping.get('date_col'),
+        'cv_col':      cv_col or mapping.get('cv_col'),
+        'channel_map': new_channel_map,
+        'control_cols': mapping.get('control_cols', []),
+        'unmapped':    [],
+    }
+
     # ── 分析開始ボタンの有効化条件 ────────────────────────────────
     _job_running = False
     if not _is_demo and st.session_state.get('job_info'):
         _job_running = runner.get_job_status(st.session_state['job_info'])['status'] == 'running'
+
+    # 同じデータ・同じマッピングで分析済みなら「結果を見る」に切り替える
+    _current_source = 'demo' if _is_demo else excel_path
+    _already_analyzed = (
+        not _job_running
+        and st.session_state.get('job_info') is not None
+        and st.session_state.get('analyzed_source') == _current_source
+        and st.session_state.get('mapping_override') == mapping_override
+    )
 
     if _job_running:
         _missing = None
@@ -254,32 +286,14 @@ if True:  # 以前のタブを廃止し直接レンダリング
 
     _start_disabled = _job_running or bool(_missing) or edited.empty
 
-    # ── 分析開始ボタン ────────────────────────────────────────────
-    if st.button('分析を開始する →', type='primary', disabled=_start_disabled):
-
-        # mapping_override を構築（デモ・通常共通）
-        new_channel_map: dict = {}
-        for _, row in edited.iterrows():
-            ch   = row['チャネル名']
-            role = row['役割']
-            col_name = row['列名']
-            if ch == '（未マッピング）' or role == '（未確定）':
-                continue
-            if ch not in new_channel_map:
-                new_channel_map[ch] = {'media': None, 'cost': None, 'media_score': 0, 'cost_score': 0}
-            if role == 'コスト':
-                new_channel_map[ch]['cost'] = col_name
-            elif role == 'メディア':
-                new_channel_map[ch]['media'] = col_name
-
-        mapping_override = {
-            'date_col':    date_col or mapping.get('date_col'),
-            'cv_col':      cv_col or mapping.get('cv_col'),
-            'channel_map': new_channel_map,
-            'control_cols': mapping.get('control_cols', []),
-            'unmapped':    [],
-        }
+    # ── 分析開始 / 結果確認ボタン ────────────────────────────────
+    if _already_analyzed:
+        st.caption('前回分析したデータが読み込まれています。')
+        if st.button('分析結果を見る →', type='primary'):
+            st.switch_page('pages/summary.py')
+    elif st.button('分析を開始する →', type='primary', disabled=_start_disabled):
         st.session_state['mapping_override'] = mapping_override
+        st.session_state['analyzed_source']  = _current_source
 
         if _is_demo:
             import time
