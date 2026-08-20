@@ -205,8 +205,23 @@ def _ch_chip_row(badge_bg, badge_fg, badge_label, chs, empty_note=''):
         f'<span style="font-size:13px;color:#314858;">{chs_text}</span></div>'
     )
 
-_inc_row = _ch_chip_row('#315E6D', '#fff', f'増額推奨（{len(_inc_chs)}件）', _inc_chs)
-_dec_row = _ch_chip_row('#5C9291', '#fff', f'削減推奨（{len(_dec_chs)}件）', _dec_chs)
+def _ch_action_card(badge_bg, badge_fg, badge_label, chs, empty_note='該当なし'):
+    chs_text = '　／　'.join(f'<b>{c}</b>' for c in chs) if chs else f'<span style="color:#9AA3AA;">{empty_note}</span>'
+    return (
+        f'<div style="flex:1;min-width:180px;background:#fff;border-radius:8px;padding:10px 14px;'
+        f'box-shadow:0 0 8px rgba(49,72,88,.08);">'
+        f'<span style="background:{badge_bg};color:{badge_fg};border-radius:999px;padding:2px 8px;'
+        f'font-size:11px;font-weight:700;white-space:nowrap;">{badge_label}</span>'
+        f'<div style="font-size:13px;color:#314858;margin-top:6px;">{chs_text}</div>'
+        f'</div>'
+    )
+
+_inc_dec_cards = (
+    '<div style="display:flex;gap:10px;flex-wrap:wrap;">'
+    + _ch_action_card('#315E6D', '#fff', f'増額推奨（{len(_inc_chs)}件）', _inc_chs)
+    + _ch_action_card('#5C9291', '#fff', f'削減推奨（{len(_dec_chs)}件）', _dec_chs)
+    + '</div>'
+)
 _stop_row = _ch_chip_row('#CB8013', '#fff', f'停止・要検討（{len(_stop_chs)}件）', _stop_chs)
 
 st.markdown(f"""
@@ -227,10 +242,7 @@ st.markdown(f"""
     </div>
   </div>
   <div class="mmm-card-grid" style="margin-bottom:18px;">
-    {f'''<div class="mmm-card">
-      <div class="mmm-card-lbl">分析期間</div>
-      <div class="mmm-card-val" style="font-size:16px;line-height:1.4;">{_period_str}</div>
-    </div>''' if _period_str else ''}
+    {f'<div class="mmm-card"><div class="mmm-card-lbl">分析期間</div><div class="mmm-card-val" style="font-size:16px;line-height:1.4;">{_period_str}</div></div>' if _period_str else ''}
     <div class="mmm-card">
       <div class="mmm-card-lbl">分析チャネル数</div>
       <div class="mmm-card-val">
@@ -281,8 +293,10 @@ st.markdown(f"""
         <span style="font-size:13px;color:#314858;">
           {_realloc_text}
         </span>
-      </div>{_sat_html}{_inc_row}{_dec_row}{_stop_row}
+      </div>{_sat_html}
     </div>
+    <div style="margin-top:10px;">{_inc_dec_cards}</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">{_stop_row}</div>
   </div>
 </div>""", unsafe_allow_html=True)
 

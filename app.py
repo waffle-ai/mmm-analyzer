@@ -423,13 +423,14 @@ button[data-testid="stTooltipHoverTarget"]:hover svg,
    カードUI — KPI・サマリー系で共通使用（summary.py基準）
 ═══════════════════════════════════════════════════ */
 .mmm-card-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; }
-.mmm-card { background:#fff; border-radius:8px; padding:11px 14px; box-shadow:0 0 12px rgba(49,72,88,.14); text-align:center; }
+.mmm-card { background:#fff; border-radius:8px; padding:11px 14px; box-shadow:0 0 12px rgba(49,72,88,.14); text-align:center; display:flex; flex-direction:column; justify-content:center; }
 .mmm-card-lbl {
     color:#5C9291; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.08em;
     margin-bottom:3px; display:flex; align-items:center; justify-content:center; gap:5px;
 }
 .mmm-card-val { font-size:20px; font-weight:700; color:#314858; line-height:1.3; display:flex; align-items:center; justify-content:center; gap:6px; }
 .mmm-card-unit { font-size:12px; font-weight:400; color:#5C9291; }
+.mmm-card-badge { display:flex; align-items:center; justify-content:center; margin:2px 0; }
 
 /* KPIグレードバッジ — 精度指標・ROI系で共通使用 */
 .kpi-badge { font-size:11px; padding:2px 6px; border-radius:3px; flex-shrink:0; line-height:1.5; }
@@ -505,8 +506,8 @@ div[data-testid="stTextInputRootElement"] input:disabled {
 
     .js-plotly-plot.mmm-vert-bar .bars .point path {
         animation-name: mmm-bar-grow-v;
-        animation-duration: .7s;
-        animation-delay: .2s;
+        animation-duration: .55s;
+        animation-delay: .1s;
         animation-timing-function: cubic-bezier(.25,.8,.35,1);
         animation-fill-mode: both;
     }
@@ -529,8 +530,8 @@ div[data-testid="stTextInputRootElement"] input:disabled {
        グループごとclip-pathすることでラベルもバーの伸長と同じ歩調で現れる */
     .js-plotly-plot.mmm-horiz-bar .bars .point {
         animation-name: mmm-bar-grow-h;
-        animation-duration: .7s;
-        animation-delay: .2s;
+        animation-duration: .55s;
+        animation-delay: .1s;
         animation-timing-function: cubic-bezier(.25,.8,.35,1);
         animation-fill-mode: both;
     }
@@ -541,8 +542,8 @@ div[data-testid="stTextInputRootElement"] input:disabled {
 
     .js-plotly-plot .scatterlayer .lines {
         animation-name: mmm-line-draw;
-        animation-duration: .9s;
-        animation-delay: .2s;
+        animation-duration: .7s;
+        animation-delay: .1s;
         animation-timing-function: ease-out;
         animation-fill-mode: both;
     }
@@ -550,8 +551,8 @@ div[data-testid="stTextInputRootElement"] input:disabled {
        線が伸びるのに合わせてドットも同じ歩調で現れるようにする */
     .js-plotly-plot .scatterlayer .trace:has(.js-line) .points {
         animation-name: mmm-line-draw;
-        animation-duration: .9s;
-        animation-delay: .2s;
+        animation-duration: .7s;
+        animation-delay: .1s;
         animation-timing-function: ease-out;
         animation-fill-mode: both;
     }
@@ -564,8 +565,8 @@ div[data-testid="stTextInputRootElement"] input:disabled {
        画面内に入ったタイミングでフェードインさせる */
     .js-plotly-plot .scatterlayer .trace:not(:has(.js-line)) .points {
         animation-name: mmm-marker-fade-in;
-        animation-duration: .5s;
-        animation-delay: .2s;
+        animation-duration: .4s;
+        animation-delay: .1s;
         animation-timing-function: ease-out;
         animation-fill-mode: both;
     }
@@ -577,8 +578,8 @@ div[data-testid="stTextInputRootElement"] input:disabled {
     /* CPA信頼区間（フォレストプロット）: ■マーカーを中心に誤差バーが左右に広がる */
     .js-plotly-plot .errorbars {
         animation-name: mmm-errorbar-grow;
-        animation-duration: .7s;
-        animation-delay: .2s;
+        animation-duration: .55s;
+        animation-delay: .1s;
         animation-timing-function: cubic-bezier(.25,.8,.35,1);
         animation-fill-mode: both;
         transform-box: fill-box;
@@ -596,8 +597,8 @@ div[data-testid="stTextInputRootElement"] input:disabled {
     }
     .js-plotly-plot .pielayer {
         animation-name: mmm-donut-sweep;
-        animation-duration: .9s;
-        animation-delay: .2s;
+        animation-duration: .7s;
+        animation-delay: .1s;
         animation-timing-function: ease-out;
         animation-fill-mode: both;
         -webkit-mask-image: conic-gradient(from 0deg, #000 calc(var(--mmm-donut-p)*3.6deg), transparent calc(var(--mmm-donut-p)*3.6deg));

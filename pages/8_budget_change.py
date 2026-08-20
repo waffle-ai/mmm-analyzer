@@ -166,38 +166,34 @@ def _interp_hex(c0, c1, t):
     return f'#{r:02x}{g:02x}{b:02x}'
 
 def _scenario_bar_colors(rows_df):
-    """減額シナリオと増額シナリオでグラデーション範囲を分離して色リストを返す。
+    """減額(左)→増額(右)の並び順に沿った単一の連続グラデーションを返す。
 
-    減額側（左3本）は淡色域(_COL_LIGHTEST〜_COL_LIGHT)のみを使い、
-    増額側の濃いグラデーションと混ざって濃く見えないようにする。
+    途中で色系統を切り替えると隣り合う棒の明暗が不連続になり
+    「色がバラバラ」に見えるため、全8本を1本のグラデーションで塗る。
     """
-    dec_rows = [row for _, row in rows_df.iterrows() if row['scenario'] < -0.001]
-    inc_rows = [row for _, row in rows_df.iterrows()
-                if row['scenario'] > 0.001 and '最適配分' not in str(row['label'])]
-    colors = []
-    _di = _ii = 0
+    n = len(rows_df)
+    return [_interp_hex(_COL_LIGHTEST, _COL_PRIMARY, i / max(n - 1, 1)) for i in range(n)]
+
+def _scenario_bar_borders(rows_df):
+    """「現状（最適配分）」だけは縁取りで強調し、色系統は変えずに区別する。"""
+    widths, colors = [], []
     for _, row in rows_df.iterrows():
         if '最適配分' in str(row['label']):
+            widths.append(2.5)
             colors.append(_COL_GREEN)
-        elif abs(row['scenario']) < 0.001:
-            colors.append(_COL_MID)
-        elif row['scenario'] < 0:
-            t = _di / max(len(dec_rows) - 1, 1)
-            colors.append(_interp_hex(_COL_LIGHTEST, _COL_LIGHT, t))
-            _di += 1
         else:
-            t = _ii / max(len(inc_rows) - 1, 1)
-            colors.append(_interp_hex(_COL_LIGHT, _COL_PRIMARY, t))
-            _ii += 1
-    return colors
+            widths.append(0)
+            colors.append('rgba(0,0,0,0)')
+    return widths, colors
 
 bar_colors = _scenario_bar_colors(df)
+border_widths, border_colors = _scenario_bar_borders(df)
 
 fig_cv = go.Figure()
 fig_cv.add_trace(go.Bar(
     x=df['label'],
     y=df['推定CV'],
-    marker_color=bar_colors,
+    marker=dict(color=bar_colors, line=dict(color=border_colors, width=border_widths)),
     text=[f"{int(v):,}" for v in df['推定CV']],
     textposition='outside',
     textfont=dict(size=12, color='#314858'),
@@ -228,11 +224,14 @@ st.plotly_chart(fig_cv, use_container_width=True)
 
 # 凡例説明
 st.markdown(
-    '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;">'
-    f'<span style="font-size:12px;color:#5C9291;">■ <span style="color:{_COL_LIGHT}">■</span> 減額シナリオ</span>'
-    f'<span style="font-size:12px;color:#5C9291;">■ <span style="color:{_COL_MID}">■</span> 現状</span>'
-    f'<span style="font-size:12px;color:#5C9291;">■ <span style="color:{_COL_GREEN}">■</span> 現状（最適配分）</span>'
-    f'<span style="font-size:12px;color:#5C9291;">■ <span style="color:{_COL_PRIMARY}">■</span> 増額シナリオ</span>'
+    '<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">'
+    f'<span style="font-size:12px;color:#5C9291;">'
+    f'<span style="display:inline-block;width:60px;height:10px;vertical-align:middle;'
+    f'background:linear-gradient(90deg,{_COL_LIGHTEST},{_COL_PRIMARY});border-radius:2px;"></span>'
+    ' 減額シナリオ → 増額シナリオ</span>'
+    f'<span style="font-size:12px;color:#5C9291;">'
+    f'<span style="border:2.5px solid {_COL_GREEN};display:inline-block;width:9px;height:9px;vertical-align:middle;"></span>'
+    ' 現状（最適配分）</span>'
     '</div>',
     unsafe_allow_html=True,
 )

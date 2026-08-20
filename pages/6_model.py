@@ -91,23 +91,28 @@ _rssd_str = f'{_rssd:.3f}' if _rssd is not None else 'N/A'
 st.markdown(f"""<div class="mmm-card-grid" style="margin-bottom:24px;">
   <div class="mmm-card">
     <div class="mmm-card-lbl">説明力<span class="lq">?<span class="lq-tip">R²（決定係数）。成果の何%をモデルが説明できているかを示します。<br>◎ ≥0.90 &nbsp;○ ≥0.85 &nbsp;△ ≥0.80 &nbsp;× それ未満<br><br>1.0に近いほどモデルが実績をよく再現しています。0.85以上が実務の合格ラインです。</span></span></div>
-    <div class="mmm-card-val">{_r2:.3f}<span class="kpi-badge {_badge_cls(r2_l)}">{r2_l}</span></div>
+    <div class="mmm-card-badge"><span class="kpi-badge {_badge_cls(r2_l)}">{r2_l}</span></div>
+    <div class="mmm-card-val">{_r2:.3f}</div>
   </div>
   <div class="mmm-card">
     <div class="mmm-card-lbl">予測精度<span class="lq">?<span class="lq-tip">NRMSE（学習データ）。モデルが学習データをどれだけ正確に予測できているかを示します。<br>◎ &lt;0.10 &nbsp;○ &lt;0.12 &nbsp;△ &lt;0.15 &nbsp;× それ以上<br><br>学習誤差と検証誤差の差が大きい場合は過学習の可能性があります。</span></span></div>
-    <div class="mmm-card-val">{_nrmse_t:.3f}<span class="kpi-badge {_badge_cls(nt_l)}">{nt_l}</span></div>
+    <div class="mmm-card-badge"><span class="kpi-badge {_badge_cls(nt_l)}">{nt_l}</span></div>
+    <div class="mmm-card-val">{_nrmse_t:.3f}</div>
   </div>
   <div class="mmm-card">
     <div class="mmm-card-lbl">汎化性能<span class="lq">?<span class="lq-tip">NRMSE（ホールドアウト）。未学習データへの予測誤差で汎化性能を示します。<br>◎ &lt;0.15 &nbsp;○ &lt;0.20 &nbsp;△ &lt;0.25 &nbsp;× それ以上<br><br>学習NRMSEと大きく乖離している場合、特定期間への過適合が起きている可能性があります。</span></span></div>
-    <div class="mmm-card-val">{_nrmse_h:.3f}<span class="kpi-badge {_badge_cls(nh_l)}">{nh_l}</span></div>
+    <div class="mmm-card-badge"><span class="kpi-badge {_badge_cls(nh_l)}">{nh_l}</span></div>
+    <div class="mmm-card-val">{_nrmse_h:.3f}</div>
   </div>
   <div class="mmm-card">
     <div class="mmm-card-lbl">配分整合性<span class="lq">?<span class="lq-tip">RSSD。モデルが推定するROI比率と、実際の広告費配分比率の乖離度です。<br>◎ 0.10〜0.20 &nbsp;○ ≤0.30 &nbsp;△ ≤0.40 &nbsp;× それ以外<br><br>低すぎる（&lt;0.10）とチャネル間の差別化が弱く、高すぎると配分とROIが大きく乖離しています。</span></span></div>
-    <div class="mmm-card-val">{_rssd_str}<span class="kpi-badge {_badge_cls(rs_l)}">{rs_l}</span></div>
+    <div class="mmm-card-badge"><span class="kpi-badge {_badge_cls(rs_l)}">{rs_l}</span></div>
+    <div class="mmm-card-val">{_rssd_str}</div>
   </div>
   <div class="mmm-card">
     <div class="mmm-card-lbl">媒体帰属率<span class="lq">?<span class="lq-tip lq-tip-left">MCR（Media Contribution Rate）。全成果のうち広告施策が起因する割合（sqrt空間）です。<br>◎ ≥15% &nbsp;○ ≥8% &nbsp;△ ≥3% &nbsp;× それ未満<br><br>低い場合はブランド・自然流入など広告以外の要因が大きく、ROI推定精度に影響します。</span></span></div>
-    <div class="mmm-card-val">{_mcr_str}<span class="kpi-badge {_badge_cls(mc_l)}">{mc_l}</span></div>
+    <div class="mmm-card-badge"><span class="kpi-badge {_badge_cls(mc_l)}">{mc_l}</span></div>
+    <div class="mmm-card-val">{_mcr_str}</div>
   </div>
 </div>""", unsafe_allow_html=True)
 
