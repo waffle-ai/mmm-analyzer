@@ -485,13 +485,19 @@ div[data-testid="stTextInputRootElement"] input:disabled {
 ═══════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: no-preference) {
     .js-plotly-plot .bars .point path,
+    .js-plotly-plot.mmm-horiz-bar .bars .point,
     .js-plotly-plot .scatterlayer .lines,
+    .js-plotly-plot .scatterlayer .trace:has(.js-line) .points,
+    .js-plotly-plot .scatterlayer .trace:not(:has(.js-line)) .points,
     .js-plotly-plot .pielayer,
     .js-plotly-plot .errorbars {
         animation-play-state: paused;
     }
     .js-plotly-plot.mmm-in-view .bars .point path,
+    .js-plotly-plot.mmm-in-view.mmm-horiz-bar .bars .point,
     .js-plotly-plot.mmm-in-view .scatterlayer .lines,
+    .js-plotly-plot.mmm-in-view .scatterlayer .trace:has(.js-line) .points,
+    .js-plotly-plot.mmm-in-view .scatterlayer .trace:not(:has(.js-line)) .points,
     .js-plotly-plot.mmm-in-view .pielayer,
     .js-plotly-plot.mmm-in-view .errorbars {
         animation-play-state: running;
@@ -509,7 +515,19 @@ div[data-testid="stTextInputRootElement"] input:disabled {
         to   { clip-path: inset(0% 0 0 0); }
     }
 
-    .js-plotly-plot.mmm-horiz-bar .bars .point path {
+    /* 残差グラフ等、ゼロ基準線をまたぐ棒（負の値=JS側でmmm-bar-negを付与）:
+       ゼロ線（棒の上端）から下向きに伸びるようにする */
+    .js-plotly-plot.mmm-vert-bar .bars .point path.mmm-bar-neg {
+        animation-name: mmm-bar-grow-v-down;
+    }
+    @keyframes mmm-bar-grow-v-down {
+        from { clip-path: inset(0 0 100% 0); }
+        to   { clip-path: inset(0 0 0% 0); }
+    }
+
+    /* 横棒: バー本体とデータラベル(<text>)は同じ<g class="point">の兄弟要素なので、
+       グループごとclip-pathすることでラベルもバーの伸長と同じ歩調で現れる */
+    .js-plotly-plot.mmm-horiz-bar .bars .point {
         animation-name: mmm-bar-grow-h;
         animation-duration: .7s;
         animation-delay: .2s;
@@ -528,9 +546,32 @@ div[data-testid="stTextInputRootElement"] input:disabled {
         animation-timing-function: ease-out;
         animation-fill-mode: both;
     }
+    /* 折れ線のドット(マーカー): 線と同じclip-pathアニメーションを適用し、
+       線が伸びるのに合わせてドットも同じ歩調で現れるようにする */
+    .js-plotly-plot .scatterlayer .trace:has(.js-line) .points {
+        animation-name: mmm-line-draw;
+        animation-duration: .9s;
+        animation-delay: .2s;
+        animation-timing-function: ease-out;
+        animation-fill-mode: both;
+    }
     @keyframes mmm-line-draw {
         from { clip-path: inset(0 100% 0 0); }
         to   { clip-path: inset(0 0% 0 0); }
+    }
+
+    /* レスポンスカーブ等、線を伴わない単独マーカーのみのトレース: 最初は非表示にしておき、
+       画面内に入ったタイミングでフェードインさせる */
+    .js-plotly-plot .scatterlayer .trace:not(:has(.js-line)) .points {
+        animation-name: mmm-marker-fade-in;
+        animation-duration: .5s;
+        animation-delay: .2s;
+        animation-timing-function: ease-out;
+        animation-fill-mode: both;
+    }
+    @keyframes mmm-marker-fade-in {
+        from { opacity: 0; }
+        to   { opacity: 1; }
     }
 
     /* CPA信頼区間（フォレストプロット）: ■マーカーを中心に誤差バーが左右に広がる */
@@ -588,8 +629,28 @@ components.html("""
         var IDLE_FRAME_MAX_MS = 50;
         var IDLE_WAIT_CAP_MS = 4000;
 
+        // 残差グラフ等、ゼロ基準線をまたぐ縦棒: SVGパス自体の形状(M x,y0 V y1 H x1 V y0 Z)から
+        // 上端/下端を読み取り、ゼロ線(y0)より下に伸びる棒(y1 > y0 = 負の値)に mmm-bar-neg を付与する。
+        // plot.data.y はPlotlyの内部シリアライズ形式(typed array等)で直接読めない場合があるため、
+        // 描画済みパスの座標から判定する方が確実。
+        function markBarSigns(plot) {
+            try {
+                if (!plot.classList.contains('mmm-vert-bar')) return;
+                var paths = plot.querySelectorAll('.barlayer .points > .point > path');
+                for (var i = 0; i < paths.length; i++) {
+                    var d = paths[i].getAttribute('d');
+                    if (!d) continue;
+                    var m = d.match(/^M-?[\d.]+,(-?[\d.]+)V(-?[\d.]+)H/);
+                    if (m && parseFloat(m[2]) > parseFloat(m[1])) {
+                        paths[i].classList.add('mmm-bar-neg');
+                    }
+                }
+            } catch (e) { /* noop */ }
+        }
+
         function reveal(plot) {
             if (plot.classList.contains('mmm-in-view')) return;
+            markBarSigns(plot);
             plot.classList.add('mmm-in-view');
             if (plot.__mmmRedrawObs) {
                 plot.__mmmRedrawObs.disconnect();

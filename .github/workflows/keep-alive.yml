@@ -1,0 +1,15 @@
+name: Keep Streamlit Demo Awake
+
+# デモ用URL(https://smart-mmm.streamlit.app/)がCommunity Cloudの
+# 7日間無アクセスによる自動スリープに入らないよう、定期的にアクセスするだけのジョブ。
+on:
+  schedule:
+    - cron: '0 */12 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping demo app
+        run: curl -sS -o /dev/null -w 'status=%{http_code}\n' --max-time 30 --retry 2 https://smart-mmm.streamlit.app/

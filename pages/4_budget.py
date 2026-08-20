@@ -233,5 +233,5 @@ with col_r:
     fig_sim.update_layout(showlegend=False, margin=dict(t=10, b=10))
     st.plotly_chart(fig_sim, use_container_width=True)
 
-_note = 'レスポンスカーブに基づく非線形最適化' if _channel_opt else f'{_eff_label}最適化'
+_note = 'MMMモデルによる最適化' if _channel_opt else f'{_eff_label}最適化'
 st.caption(f'※ 最適配分は{_note}の試算値です。実際の施策では配信面・在庫・最低予算等の制約を加味して判断してください。')

@@ -313,7 +313,7 @@ if _ch_actions:
     )
     fig_smry.update_yaxes(gridcolor='#DAEBE5')
     st.plotly_chart(fig_smry, use_container_width=True)
-    st.caption('※ 最適配分はレスポンスカーブに基づく試算値です。詳細は「予算配分分析」ページを参照してください。')
+    st.caption('※ 最適配分はMMMモデルによる試算値です。詳細は「予算配分分析」ページを参照してください。')
 
 # ── 詳細分析へのナビゲーション ────────────────────────────────────────────
 st.divider()
