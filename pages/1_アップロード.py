@@ -142,7 +142,10 @@ with st.container(border=True):
                 st.session_state['detect_result']    = result
                 st.session_state['mapping_override'] = None
                 st.session_state['demo_mode']        = True
-                st.session_state['job_info'] = {
+                # job_info はまだ確定させない。「分析を開始する」を押すまでは
+                # 結果ページに前回結果扱いで表示されてしまうため、
+                # pages/2_マッピング確認.py の開始ボタン押下時に昇格させる。
+                st.session_state['_demo_job_info_pending'] = {
                     'demo':       True,
                     'job_id':     'demo',
                     'pid':        None,

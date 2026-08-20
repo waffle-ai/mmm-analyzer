@@ -77,6 +77,7 @@ elif st.button('分析を開始する →', type='primary'):
             _prev = _pct
         time.sleep(0.3)
         st.session_state['analyzed_source'] = _current_source
+        st.session_state['job_info'] = st.session_state.pop('_demo_job_info_pending', None)
         st.switch_page('pages/summary.py')
     else:
         # 本番モードはマッピング設定ページへ（data_editor の設定が必要なため）
