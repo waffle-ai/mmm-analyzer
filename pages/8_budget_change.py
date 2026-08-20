@@ -222,7 +222,7 @@ fig_cv.update_layout(
     margin=dict(l=10, r=10, t=30, b=10),
     plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
     yaxis=dict(gridcolor='#DAEBE5', zeroline=False),
-    xaxis=dict(gridcolor='rgba(0,0,0,0)'),
+    xaxis=dict(gridcolor='rgba(0,0,0,0)', type='category'),
 )
 st.plotly_chart(fig_cv, use_container_width=True)
 
@@ -297,13 +297,11 @@ for _, row in df.iterrows():
 
 eff_df = pd.DataFrame(eff_rows)
 
-eff_colors = _scenario_bar_colors(eff_df)
-
 fig_eff = go.Figure()
 fig_eff.add_trace(go.Bar(
     x=eff_df['label'],
     y=eff_df['eff'],
-    marker_color=eff_colors,
+    marker_color=_COL_MID,
     text=eff_df['eff_fmt'],
     textposition='outside',
     textfont=dict(size=11),
@@ -314,7 +312,7 @@ fig_eff.update_layout(
     margin=dict(l=10, r=10, t=20, b=10),
     plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
     yaxis=dict(gridcolor='#DAEBE5', title=_eff_yaxis),
-    xaxis=dict(gridcolor='rgba(0,0,0,0)'),
+    xaxis=dict(gridcolor='rgba(0,0,0,0)', type='category'),
 )
 st.plotly_chart(fig_eff, use_container_width=True)
 

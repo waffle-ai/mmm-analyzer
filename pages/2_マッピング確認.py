@@ -134,8 +134,7 @@ if True:  # 以前のタブを廃止し直接レンダリング
 
         st.markdown("""<style>
         .mp-hdr{display:grid;grid-template-columns:2fr 2fr 1.4fr 0.6fr;
-                gap:0 4px;padding:0;
-                border-bottom:2px solid #C5DFD9;margin-bottom:10px;}
+                gap:0 4px;padding:0;margin-bottom:10px;}
         .mp-hdr > span{font-size:11px;font-weight:700;color:#33625A;
                      text-transform:uppercase;letter-spacing:.07em;text-align:center;
                      background:#C5DFD9;padding:8px 12px 6px;}
