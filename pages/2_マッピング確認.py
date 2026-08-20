@@ -188,7 +188,7 @@ if True:  # 以前のタブを廃止し直接レンダリング
     budget_increase = 0.3
 
     st.subheader('分析設定')
-    col_a, col_b, col_c = st.columns(3)
+    col_a, col_b = st.columns(2)
     with col_a:
         st.markdown(
             '<div class="lbl-q">分析精度（試行回数）'
@@ -210,9 +210,6 @@ if True:  # 以前のタブを廃止し直接レンダリング
         )
         n_trials = _trial_presets[_trial_choice]
     with col_b:
-        report_type = st.selectbox('レポートタイプ', ['full（フルレポート）', 'simple（簡易版）'])
-        report_type_val = 'full' if 'full' in report_type else 'simple'
-    with col_c:
         st.markdown(
             '<div class="lbl-q">シナリオB増額率 (%)'
             '<span class="lq">?<span class="lq-tip lq-tip-left">'
@@ -332,6 +329,7 @@ if True:  # 以前のタブを廃止し直接レンダリング
                     time.sleep(_step_sleep)
                 _prev = _pct
             time.sleep(0.3)
+            st.session_state['job_info'] = st.session_state.pop('_demo_job_info_pending', None)
             st.switch_page('pages/summary.py')
         else:
             with st.spinner('分析ジョブを起動中...'):
