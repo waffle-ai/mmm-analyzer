@@ -57,6 +57,7 @@ _LAMBDA_PROFILES = {
 _LAMBDA_TYPE_RULES = [
     # ── Search / Direct-response digital ─────────────────────────────────
     (('SEM_',),                                              'intent'),
+    (('GOOGLE_SEARCH', 'google_search_'),                    'intent'),   # Google検索
     (('Pmax_', 'GOOGLE_PMAX', 'google_pmax', 'pmax_'),       'pmax'),
     (('bing_', 'msn_', 'yahoo_search_'),                     'intent'),   # Bing/Yahoo検索
     (('affiliate_', 'aff_'),                                 'intent'),   # アフィリエイト
