@@ -209,10 +209,10 @@ def _ch_action_card(badge_bg, badge_fg, badge_label, chs, empty_note='該当な�
     chs_text = '　／　'.join(f'<b>{c}</b>' for c in chs) if chs else f'<span style="color:#9AA3AA;">{empty_note}</span>'
     return (
         f'<div style="flex:1;min-width:180px;background:#fff;border-radius:8px;padding:10px 14px;'
-        f'box-shadow:0 0 8px rgba(49,72,88,.08);">'
+        f'box-shadow:0 0 8px rgba(49,72,88,.08);display:flex;align-items:center;gap:10px;">'
         f'<span style="background:{badge_bg};color:{badge_fg};border-radius:999px;padding:2px 8px;'
-        f'font-size:11px;font-weight:700;white-space:nowrap;">{badge_label}</span>'
-        f'<div style="font-size:13px;color:#314858;margin-top:6px;">{chs_text}</div>'
+        f'font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0;">{badge_label}</span>'
+        f'<span style="font-size:13px;color:#314858;">{chs_text}</span>'
         f'</div>'
     )
 
