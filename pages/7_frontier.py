@@ -76,35 +76,25 @@ if not _ch_valid:
 # ── 投資効率上限サマリー ──────────────────────────────────────────────────
 if _max_eff > 0:
     _max_man = round(_max_eff / 10000, 0)
-    col_a, col_b = st.columns([2, 1])
-    with col_a:
-        st.markdown(f"""
-        <div style="background:#F3F7F4;border-radius:10px;padding:18px 22px;box-shadow:0 1px 3px rgba(49,72,88,.08);">
-          <div style="color:#5C9291;font-size:11px;text-transform:uppercase;letter-spacing:.08em;
-               margin-bottom:6px;">効率的な投資上限（全チャネル合計）</div>
-          <div style="font-size:32px;font-weight:800;color:#314858;">
-            {_max_man:,.0f}<span style="font-size:16px;font-weight:400;color:#5C9291;"> 万円</span>
-          </div>
-          <div style="color:#5C9291;font-size:12px;margin-top:6px;">
-            これ以上の総広告費増額は費用対効果が大きく低下します。
-            {f'目安CPA: ¥{_thr_cpa:,}' if _thr_cpa > 0 else ''}
-          </div>
-        </div>""", unsafe_allow_html=True)
-    with col_b:
-        _total_spend = sum(v.get('spend_man', 0) for v in _ch_valid.values())
-        _pct_to_max  = (_total_spend / _max_man * 100) if _max_man > 0 else 0
-        _color_pct   = _COL_PRIMARY if _pct_to_max < 80 else _COL_AMBER if _pct_to_max < 100 else '#CB8013'
-        st.markdown(f"""
-        <div style="background:#F3F7F4;border-radius:10px;padding:18px 22px;
-                    box-shadow:0 1px 3px rgba(49,72,88,.08);text-align:center;">
-          <div style="color:#5C9291;font-size:11px;text-transform:uppercase;letter-spacing:.08em;
-               margin-bottom:6px;">現在の使用率</div>
-          <div style="font-size:32px;font-weight:800;color:{_color_pct};">
-            {_pct_to_max:.0f}<span style="font-size:16px;font-weight:400;color:#5C9291;">%</span>
-          </div>
-          <div style="color:#5C9291;font-size:12px;margin-top:6px;">現状 {_total_spend:,.1f} 万円</div>
-        </div>""", unsafe_allow_html=True)
-    st.markdown('<div style="margin-bottom:20px;"></div>', unsafe_allow_html=True)
+    _total_spend = sum(v.get('spend_man', 0) for v in _ch_valid.values())
+    _pct_to_max  = (_total_spend / _max_man * 100) if _max_man > 0 else 0
+    _color_pct   = _COL_PRIMARY if _pct_to_max < 80 else _COL_AMBER if _pct_to_max < 100 else '#CB8013'
+    st.markdown(f"""
+    <div class="mmm-card-grid" style="margin-bottom:20px;">
+      <div class="mmm-card">
+        <div class="mmm-card-lbl">効率的な投資上限（全チャネル合計）</div>
+        <div class="mmm-card-val">{_max_man:,.0f}<span class="mmm-card-unit">万円</span></div>
+        <div style="font-size:11px;color:#5C9291;margin-top:4px;">
+          これ以上の総広告費増額は費用対効果が大きく低下します。
+          {f'目安CPA：¥{_thr_cpa:,}' if _thr_cpa > 0 else ''}
+        </div>
+      </div>
+      <div class="mmm-card">
+        <div class="mmm-card-lbl">現在の使用率</div>
+        <div class="mmm-card-val" style="color:{_color_pct};">{_pct_to_max:.0f}<span class="mmm-card-unit">%</span></div>
+        <div style="font-size:11px;color:#5C9291;margin-top:4px;">現状 {_total_spend:,.1f} 万円</div>
+      </div>
+    </div>""", unsafe_allow_html=True)
 
 st.divider()
 
